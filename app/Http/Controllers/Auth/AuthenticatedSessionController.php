@@ -17,8 +17,7 @@ class AuthenticatedSessionController extends Controller
     public function create(): View
     {
         return view('auth.login');
-    } // <--- Tadi merah karena mungkin ini terhapus atau nempel
-
+    }
 
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -26,25 +25,37 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // AMBIL DATA USER YANG LOGIN
-        $user = auth()->user();
+        $user = Auth::user();
+        $role = trim($user->role);
 
-        // LOGIKA PENGALIHAN BERDASARKAN ROLE
-        if ($user->role === 'admin') {
-            return redirect()->intended(route('admin.dashboard'));
-        } elseif ($user->role === 'kepala') {
-            return redirect()->intended(route('kepala.dashboard'));
-        } elseif ($user->role === 'mitra') {
-            return redirect()->intended(route('dashboard'));
+        // 1. Redirect untuk Admin
+        if ($role === 'admin') {
+            return redirect()->route('admin.dashboard');
+
+        // 2. Redirect untuk Kepala BUMDes
+        } elseif ($role === 'kepala-bumdes') {
+            return redirect()->route('kepala-bumdes.dashboard');
+
+        // 3. Redirect untuk Mitra
+       } elseif ($role === 'mitra') {
+    // Cek apakah mitra sudah ada dan statusnya 'aktif' di tabel mitras
+    if ($user->mitra && $user->mitra->status === 'aktif') {
+        return redirect()->route('mitra.dashboard');
+    } else {
+        return redirect()->route('mitra.menunggu');
+    }
+
+
+        // 4. KHUSUS CUSTOMER (Tambahkan ini agar tidak mental ke index)
+        } elseif ($role === 'customer') {
+            return redirect()->route('customer.dashboard');
+
+        // 5. Fallback terakhir jika tidak ada yang cocok
         } else {
-            // Default untuk customer atau role lain
-            return redirect()->intended(route('index'));
+            return redirect()->intended('/');
         }
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
@@ -53,7 +64,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/login');
     }
 }
-

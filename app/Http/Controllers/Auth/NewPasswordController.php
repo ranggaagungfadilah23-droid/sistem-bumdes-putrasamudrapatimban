@@ -18,10 +18,15 @@ class NewPasswordController extends Controller
     /**
      * Display the password reset view.
      */
-    public function create(Request $request): View
-    {
-        return view('auth.reset-password', ['request' => $request]);
-    }
+   public function create(Request $request)
+{
+    // Alihkan ke halaman profil dengan membawa token dan email dari link email
+    return redirect()->route('profile.edit', [
+        'token' => $request->route('token'),
+        'email' => $request->email,
+        'is_reset' => 1 // Parameter penanda bahwa ini dari alur reset
+    ]);
+}
 
     /**
      * Handle an incoming new password request.
@@ -52,7 +57,6 @@ class NewPasswordController extends Controller
         );
 
         // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
         return $status == Password::PASSWORD_RESET
                     ? redirect()->route('login')->with('status', __($status))

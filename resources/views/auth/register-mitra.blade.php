@@ -1,229 +1,272 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isi Formulir Mitra - PasarDesa Patimban</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<x-guest-layout>
+<style>
+    .reg-title {
+        font-size: 20px; font-weight: 800; margin-bottom: 14px;
+        text-align: center; color: #fff; letter-spacing: -0.3px;
+    }
 
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Google */
+    .btn-google {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; background: #fff; color: #333;
+        border: 2px solid #000; border-radius: 8px; padding: 9px;
+        font-size: 13px; font-weight: 700; text-decoration: none;
+        transition: 0.2s; margin-bottom: 12px;
+    }
+    .btn-google:hover { background: #f5f5f5; }
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #2a3222;
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+    /* Divider */
+    .div-line { display: flex; align-items: center; margin-bottom: 14px; }
+    .div-line::before, .div-line::after { content:''; flex:1; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .div-line span { padding: 0 10px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 1.5px; }
 
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: 15vh;
-            background-color: #8a9a5b;
-            z-index: -1;
-        }
+    /* 2-col grid */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+    .span2   { grid-column: span 2; }
 
-        .form-card {
-            width: 100%;
-            max-width: 420px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.6) 10%, rgba(0,0,0,0.8) 90%, rgba(255,255,255,0.2) 100%);
-            border-radius: 8px;
-            padding: 40px 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: fadeIn 0.4s ease-out;
-        }
+    /* Mobile: 1 kolom, compact */
+    @media (max-width: 600px) {
+        .two-col { grid-template-columns: 1fr; gap: 8px; }
+        .span2   { grid-column: span 1; }
+        .reg-title { font-size: 17px; margin-bottom: 10px; }
+        .lbl { font-size: 9px; letter-spacing: 0.4px; }
+        .ic { padding: 8px 11px; font-size: 13px; }
+        textarea.ic { min-height: 58px; }
+        .btn-google { padding: 8px; margin-bottom: 10px; }
+        .div-line { margin-bottom: 10px; }
+        .radio-item { padding: 7px; }
+        .upload-area { padding: 9px 11px; }
+        .btn-submit { padding: 10px; font-size: 13px; }
+        .fg { gap: 3px; }
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    /* Field */
+    .fg { display: flex; flex-direction: column; gap: 4px; }
+    .lbl { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.8px; }
 
-        .title {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 24px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
+    /* Input */
+    .ic {
+        width: 100%; background: #fdf7e3; border: 1.5px solid #1a1a1a;
+        border-radius: 8px; padding: 9px 12px; font-size: 13px;
+        font-weight: 600; color: #333; outline: none; transition: 0.2s;
+        box-sizing: border-box; font-family: inherit;
+    }
+    .ic:focus { border-color: #8a9a5b; box-shadow: 0 0 0 3px rgba(138,154,91,0.25); }
+    textarea.ic { min-height: 74px; resize: none; }
 
-        /* --- Tombol Google --- */
-        .btn-google {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; background-color: #ffffff; color: #333333;
-            border: 2px solid #000000; border-radius: 8px; padding: 12px;
-            font-size: 15px; font-weight: 700; text-decoration: none;
-            transition: all 0.2s; margin-bottom: 20px;
-        }
-        .btn-google:hover { background-color: #f1f1f1; transform: translateY(-2px); }
+    /* Password */
+    .pw { position: relative; }
+    .pw .ic { padding-right: 36px; }
+    .pw-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #999; cursor: pointer; font-size: 13px; }
+    /* Sembunyikan ikon mata bawaan browser (Chrome, Edge, IE) */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear,
+    input[type="password"]::-webkit-contacts-auto-fill-button,
+    input[type="password"]::-webkit-credentials-auto-fill-button { display: none !important; }
+    input[type="text"].ic::-webkit-contacts-auto-fill-button,
+    input[type="text"].ic::-webkit-credentials-auto-fill-button { display: none !important; }
 
-        /* --- Divider --- */
-        .divider { display: flex; align-items: center; text-align: center; margin-bottom: 20px; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.2); }
-        .divider span { padding: 0 10px; font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 600; letter-spacing: 1px; }
+    /* Radio */
+    .radio-row { display: flex; gap: 8px; }
+    .radio-item {
+        flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+        background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.2);
+        padding: 9px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+    }
+    .radio-item:hover { background: rgba(255,255,255,0.13); }
+    .radio-item input { accent-color: #fbbc05; width: 15px; height: 15px; }
+    .radio-item span  { color: #fff; font-size: 12px; font-weight: 700; }
 
-        /* --- Styling Input Dasar --- */
-        .input-control {
-            width: 100%; background-color: #fdf7e3; border: 2px solid #000000; border-radius: 8px;
-            padding: 12px 16px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 600; color: #333 !important; margin-bottom: 12px; outline: none; transition: all 0.2s;
-        }
-        .input-control:focus { box-shadow: 0 0 0 3px rgba(138, 154, 91, 0.5); }
+    /* Upload */
+    .upload-area {
+        background: rgba(255,255,255,0.04); border: 1.5px dashed rgba(255,255,255,0.2);
+        border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .upload-btn-lbl {
+        display: block; width: 100%; background: #fdf7e3; border: 1.5px solid #000;
+        border-radius: 7px; padding: 7px; text-align: center;
+        font-size: 11px; font-weight: 700; color: #333;
+    }
+    .file-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .file-row i { font-size: 24px; color: #fbbc05; }
+    .file-name { color: #fff; font-size: 12px; font-weight: 600; text-decoration: underline; }
 
-        /* MENCEGAH WARNA BIRU AUTOFILL BROWSER */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover,
-        input:-webkit-autofill:focus {
-            -webkit-text-fill-color: #333;
-            -webkit-box-shadow: 0 0 0px 1000px #fdf7e3 inset;
-            transition: background-color 5000s ease-in-out 0s;
-        }
+    /* Submit */
+    .btn-submit {
+        width: 100%; background: #8a9a5b; border: 2px solid #000;
+        border-radius: 8px; padding: 11px; font-size: 14px;
+        font-weight: 800; color: #000; cursor: pointer; transition: 0.2s;
+    }
+    .btn-submit:hover { background: #9cb066; transform: translateY(-1px); }
 
-        /* Styling untuk input yang Readonly (saat email terisi dari Google) */
-        input[readonly] {
-            background-color: #ece6d0 !important;
-            color: #555 !important;
-            cursor: not-allowed;
-            border-style: dashed;
-        }
+    /* Note */
+    .note { color: #fbbc05; font-size: 10px; margin-top: 1px; }
 
-        .password-wrapper { position: relative; width: 100%; }
-        .password-wrapper .input-control { padding-right: 40px; }
+    /* Syarat */
+    .syarat-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; justify-content: center; }
+    .syarat-row label { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600; text-decoration: underline; cursor: pointer; }
+</style>
 
-        .toggle-password {
-            position: absolute; right: 15px; top: 14px;
-            color: #888; cursor: pointer; font-size: 16px;
-        }
+<h1 class="reg-title">Pendaftaran Mitra BUMDes</h1>
 
-        .form-row { display: flex; gap: 12px; }
-        .form-row .input-control { text-align: center; }
+<a href="{{ url('/auth/google') }}" class="btn-google">
+    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt="G">
+    Daftar dengan Google
+</a>
 
-        .btn-upload-label {
-            display: block; width: 100%; background-color: #fdf7e3; border: 2px solid #000000;
-            border-radius: 8px; padding: 10px; text-align: center; font-size: 14px; font-weight: 600;
-            color: #333; margin: 10px 0 20px 0;
-        }
+<div class="div-line"><span>ATAU DAFTAR MANUAL</span></div>
 
-        .file-list { margin-bottom: 24px; padding-left: 10px; }
-        .file-item { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; cursor: pointer; }
-        .file-item .folder-icon { font-size: 28px; color: #fbbc05; }
-        .file-item .file-text { color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: underline; }
-        .real-file-input { display: none; }
+<form method="POST" action="{{ route('mitra.store') }}" enctype="multipart/form-data">
+    @csrf
+    <div class="two-col">
 
-        .btn-simpan {
-            width: 100%; background-color: #8a9a5b; border: 2px solid #000000; border-radius: 8px;
-            padding: 12px; font-size: 16px; font-weight: 700; color: #000000; cursor: pointer; transition: all 0.2s;
-        }
-        .btn-simpan:hover { background-color: #9cb066; transform: translateY(-2px); }
+        {{-- Nama Pemilik --}}
+        <div class="fg">
+            <label class="lbl">Nama Pemilik</label>
+            <input type="text" name="nama_pemilik" class="ic" placeholder="Nama lengkap"
+                   value="{{ session('google_name') ?? old('nama_pemilik') }}" required>
+        </div>
 
-        .checkbox-group { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 15px; }
-        .checkbox-custom { appearance: none; width: 18px; height: 18px; border: 2px solid #fbbc05; border-radius: 4px; cursor: pointer; position: relative; }
-        .checkbox-custom:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #fbbc05; position: absolute; left: 1px; top: -1px; font-size: 12px; }
-        .checkbox-label { font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: underline; cursor: pointer; }
-    </style>
-</head>
-<body>
+        {{-- Nama Usaha --}}
+        <div class="fg">
+            <label class="lbl">Nama Usaha</label>
+            <input type="text" name="nama_usaha" class="ic" placeholder="Nama usaha Anda"
+                   value="{{ old('nama_usaha') }}" required>
+        </div>
 
-    <div class="form-card">
-        <h1 class="title">Isi Formulir</h1>
-        @if ($errors->any())
-    <div style="background: #ffdbdb; color: #a94442; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
-        <a href="{{ url('/auth/google') }}" class="btn-google">
-            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20" alt="Google">
-            Daftar dengan Google
-        </a>
-
-        <div class="divider"><span>ATAU DAFTAR MANUAL</span></div>
-
-        <form method="POST" action="{{ route('mitra.store') }}" enctype="multipart/form-data">
-            @csrf
-
-            <input type="email"
-                   name="email"
-                   class="input-control"
-                   placeholder="Email Aktif"
+        {{-- Email --}}
+        <div class="fg">
+            <label class="lbl">Email Aktif</label>
+            <input type="email" name="email" class="ic" placeholder="email@contoh.com"
                    value="{{ session('google_email') }}"
                    {{ session('google_email') ? 'readonly' : 'required' }}>
+        </div>
 
-            <div class="password-wrapper">
-                <input type="password" name="password" id="password" class="input-control" placeholder="Password (Min. 8 Karakter)" required>
-                <i class="fas fa-eye toggle-password" onclick="togglePassword('password', this)"></i>
+        {{-- NIK --}}
+        <div class="fg">
+            <label class="lbl">NIK (16 Digit)</label>
+            <input type="text" name="nik" class="ic" placeholder="3212XXXXXXXXXXXX"
+                   value="{{ old('nik') }}" maxlength="16" pattern="[0-9]{16}" required>
+        </div>
+
+        {{-- No HP --}}
+        <div class="fg">
+            <label class="lbl">WhatsApp <span style="color:#fbbc05">(awali 62)</span></label>
+            <input type="text" name="no_hp" class="ic" placeholder="628123456789"
+                   value="{{ old('no_hp') }}" pattern="^62[0-9]*$" required>
+            <span class="note">* Gunakan 62, bukan 0 di depan</span>
+        </div>
+
+        {{-- Dusun --}}
+        <div class="fg">
+            <label class="lbl">Dusun</label>
+            <input type="text" name="dusun" class="ic" placeholder="Nama dusun"
+                   value="{{ old('dusun') }}" required>
+        </div>
+
+        {{-- Alamat --}}
+        <div class="fg span2">
+            <label class="lbl">Alamat Usaha</label>
+            <textarea name="alamat_usaha" class="ic" placeholder="Jl. Contoh No. 1, Desa Patimban..." required>{{ old('alamat_usaha') }}</textarea>
+        </div>
+
+        {{-- Password --}}
+        <div class="fg">
+            <label class="lbl">Password</label>
+            <div class="pw">
+                <input type="password" name="password" id="password" class="ic" placeholder="Buat password" required>
+                <i class="fas fa-eye pw-eye" onclick="togglePw('password', this)"></i>
             </div>
+        </div>
 
-            <div class="password-wrapper">
-                <input type="password" name="password_confirmation" id="password_confirm" class="input-control" placeholder="Konfirmasi Password" required>
-                <i class="fas fa-eye toggle-password" onclick="togglePassword('password_confirm', this)"></i>
+        {{-- Konfirmasi Password --}}
+        <div class="fg">
+            <label class="lbl">Konfirmasi Password</label>
+            <div class="pw">
+                <input type="password" name="password_confirmation" id="pw2" class="ic" placeholder="Ulangi password" required>
+                <i class="fas fa-eye pw-eye" onclick="togglePw('pw2', this)"></i>
             </div>
+        </div>
 
-            <input type="text" name="nama_usaha" class="input-control" placeholder="Nama Usaha" required>
-            <input type="text" name="nama_pemilik" class="input-control" placeholder="Nama Pemilik" value="{{ session('google_name') }}" required>
-            <input type="text" name="jenis_usaha" class="input-control" placeholder="Jenis Usaha" required>
-            <input type="text" name="alamat_usaha" class="input-control" placeholder="Alamat Usaha" required>
-
-            <div class="form-row">
-                <input type="text" name="rt_rw" class="input-control" placeholder="RT/RW" required>
-                <input type="text" name="dusun" class="input-control" placeholder="Dusun" required>
-            </div>
-
-            <div class="btn-upload-label">Upload Dokumen</div>
-
-            <div class="file-list">
-                <label class="file-item" for="ktp-upload">
-                    <i class="fas fa-folder folder-icon"></i>
-                    <span class="file-text" id="ktp-text">KTP</span>
-                  <input type="file" name="ktp" id="ktp-upload" class="real-file-input" accept=".jpg,.png,.pdf" onchange="updateFileName(this, 'ktp-text')">
+        {{-- Jenis Usaha --}}
+        <div class="fg">
+            <label class="lbl">Jenis Usaha</label>
+            <div class="radio-row">
+                <label class="radio-item">
+                    <input type="radio" name="jenis_usaha" value="Jasa"
+                           {{ old('jenis_usaha') == 'Jasa' ? 'checked' : '' }} required>
+                    <span>Jasa</span>
                 </label>
-
-                <label class="file-item" for="sku-upload">
-                    <i class="fas fa-folder folder-icon"></i>
-                    <span class="file-text" id="sku-text">Surat Keterangan Usaha</span>
-                  <input type="file" name="sku" id="sku-upload" class="real-file-input" accept=".jpg,.png,.pdf" onchange="updateFileName(this, 'sku-text')">
+                <label class="radio-item">
+                    <input type="radio" name="jenis_usaha" value="Produk"
+                           {{ old('jenis_usaha') == 'Produk' ? 'checked' : '' }}>
+                    <span>Produk</span>
                 </label>
             </div>
+        </div>
 
-            <button type="submit" class="btn-simpan">Simpan</button>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="syarat" name="syarat" class="checkbox-custom" required checked>
-                <label for="syarat" class="checkbox-label">Syarat dan Ketentuan</label>
+        {{-- Upload Dokumen --}}
+        <div class="fg">
+            <label class="lbl">Dokumen Pendukung</label>
+            <div class="upload-area">
+                <span class="upload-btn-lbl">📎 Upload Dokumen</span>
+                <label class="file-row" for="sku-upload">
+                    <i class="fas fa-folder-open"></i>
+                    <span class="file-name" id="sku-text">Surat Keterangan Usaha</span>
+                    <input type="file" name="sku" id="sku-upload" style="display:none"
+                           accept=".jpg,.png,.pdf"
+                           onchange="updateFileName(this,'sku-text')">
+                </label>
             </div>
-        </form>
+        </div>
+
+        {{-- Submit + Syarat --}}
+        <div class="fg span2" style="margin-top:2px">
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane"></i> Simpan Data Pendaftaran
+            </button>
+            <div class="syarat-row">
+                <input type="checkbox" id="syarat" name="syarat" required
+                       style="accent-color:#fbbc05; width:14px; height:14px;">
+                <label for="syarat">Saya menyetujui Syarat dan Ketentuan</label>
+            </div>
+        </div>
+
     </div>
+</form>
 
-    <script>
-        function updateFileName(input, textId) {
-            const textElement = document.getElementById(textId);
-            if (input.files && input.files[0]) {
-                let fileName = input.files[0].name;
-                if (fileName.length > 20) { fileName = fileName.substring(0, 17) + '...'; }
-                textElement.innerText = fileName;
-                textElement.style.color = '#fbbc05';
-            }
-        }
+@push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    @if(session('success'))
+        Swal.fire({ icon:'success', title:'Berhasil!', text:"{{ session('success') }}", confirmButtonColor:'#8a9a5b' });
+    @endif
+    @if($errors->any())
+        Swal.fire({
+            icon:'error', title:'Oops...',
+            html:`<ul style="text-align:left;font-size:13px;padding-left:16px">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>`,
+            confirmButtonColor:'#d33'
+        });
+    @endif
+    @if(session('error'))
+        Swal.fire({ icon:'error', title:'Kesalahan', text:"{{ session('error') }}", confirmButtonColor:'#d33' });
+    @endif
 
-        function togglePassword(inputId, icon) {
-            const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.replace("fa-eye", "fa-eye-slash");
-            } else {
-                input.type = "password";
-                icon.classList.replace("fa-eye-slash", "fa-eye");
-            }
+    function updateFileName(input, id) {
+        const el = document.getElementById(id);
+        if (input.files?.[0]) {
+            let n = input.files[0].name;
+            el.innerText = n.length > 24 ? n.substring(0,21)+'...' : n;
+            el.style.color = '#fbbc05';
         }
-    </script>
-</body>
-</html>
+    }
+
+    function togglePw(id, icon) {
+        const el = document.getElementById(id);
+        el.type = el.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    }
+</script>
+@endpush
+</x-guest-layout>

@@ -4,27 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Mitra extends Model
 {
     use HasFactory;
 
-    // Kolom-kolom yang diizinkan untuk diisi dari form
+
     protected $fillable = [
+        'user_id',
         'nama_usaha',
         'nama_pemilik',
+        'no_hp',
+        'nik',
         'jenis_usaha',
         'alamat_usaha',
-        'rt_rw',
+        'sku',
         'dusun',
-        'ktp_path',
-        'sku_path',
         'status',
-    ];
 
-    // (Opsional) Relasi ke User jika nanti kamu hubungkan dengan tabel users
-    // public function user()
-    // {
-    //     return $this->belongsTo(User::class);
-    // }
+    ];
+        use LogsActivity;
+      public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'nama_usaha'])
+            ->setDescriptionForEvent(fn(string $eventName) => "Data mitra {$eventName}")
+            ->useLogName('mitra');
+    }
+
+    /**
+     * Relasi balik ke User
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
