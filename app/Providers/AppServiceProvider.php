@@ -2,49 +2,17 @@
 
 namespace App\Providers;
 
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Auth\Events\Verified;
-use App\Listeners\BeritahuAdminSetelahVerifikasi;
+use Illuminate\Support\ServiceProvider;
 
-class EventServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * The event to listener mappings for the application.
-     *
-     * @var array<class-string, array<int, class-string>>
-     */
-    protected $listen = [
-        Registered::class => [
-            SendEmailVerificationNotification::class,
-        ],
+    public function register(): void
+    {
+        //
+    }
 
-        Verified::class => [
-            BeritahuAdminSetelahVerifikasi::class,
-        ],
-    ];
-
-    /**
-     * Register any events for your application.
-     */
     public function boot(): void
     {
-        // Logika ini otomatis mendeteksi:
-        // Jika APP_URL pakai https (Ngrok), maka sistem akan dipaksa HTTPS.
-        // Jika APP_URL pakai http (Localhost), maka sistem tetap HTTP.
-      if (str_contains(config('app.url'), 'https://')) {
-        \Illuminate\Support\Facades\URL::forceScheme('https');
-    }
-    }
-
-    /**
-     * Determine if events and listeners should be automatically discovered.
-     */
-    public function shouldDiscoverEvents(): bool
-    {
-        return false;
+        //
     }
 }
