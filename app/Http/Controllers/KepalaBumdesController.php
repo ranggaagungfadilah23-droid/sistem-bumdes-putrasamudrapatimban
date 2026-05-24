@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\SvgWriter;
@@ -69,24 +70,36 @@ class KepalaBumdesController extends Controller
                 $user->mitra->update(['status' => 'aktif']);
             }
 
-            // Generate QR Code — endroid/qr-code, tidak butuh Imagick
+            // Generate QR Code
             $isiQR = "DISAHKAN OLEH: IQBAL NUR AFRIZAL\n" .
                      "Direktur Utama BUMDes Putra Samudra Patimban\n" .
                      "Mitra: " . $user->name;
 
-            $qrCode  = new QrCode($isiQR);
-            $writer  = new SvgWriter();
-            $result  = $writer->write($qrCode);
+            $qrCode   = new QrCode($isiQR);
+            $writer   = new SvgWriter();
+            $result   = $writer->write($qrCode);
             $qrBase64 = base64_encode($result->getString());
 
             $pdf = Pdf::loadView('pdf.sertifikat', [
-                'user'     => $user,
-                'qrCode'   => $qrBase64,
-                'tanggal'  => now()->translatedFormat('d F Y'),
+                'user'    => $user,
+                'qrCode'  => $qrBase64,
+                'tanggal' => now()->translatedFormat('d F Y'),
             ]);
 
             $pdfContent = $pdf->output();
 
+            // 1. Simpan PDF ke arsip Storage Server (untuk backup/histori)
+            Storage::disk('public')->put('sertifikat/' . $namaFile, $pdfContent);
+
+            // 2. KIRIM WA DULU (Hanya Teks Pemberitahuan ke Mitra)
+            $no_hp = $user->mitra->no_hp ?? '';
+            if ($no_hp) {
+                $pesanWA = "Halo *{$user->name}*,\n\nSelamat! Pendaftaran Mitra Anda telah *DISAHKAN* oleh Kepala BUMDes Putra Samudra Patimban.\n\nSurat Sertifikat Pengesahan resmi Anda telah kami kirimkan ke alamat email: *{$user->email}*. Silakan cek Kotak Masuk (Inbox) atau folder Spam Anda untuk mengunduh dokumen tersebut.\n\nTerima kasih dan selamat bergabung!\n\n*BUMDes Patimban*";
+
+                $this->kirimWA($no_hp, $pesanWA);
+            }
+
+            // 3. KIRIM EMAIL (Berisi lampiran File PDF)
             Mail::to($user->email)->send(
                 new SertifikatMitraMail($user, $pdfContent, $namaFile)
             );
@@ -94,7 +107,7 @@ class KepalaBumdesController extends Controller
             DB::commit();
 
             return redirect()->route('kepala-bumdes.pengajuan')
-                ->with('success', "Pendaftaran {$user->name} disahkan. Sertifikat dikirim ke email mitra.");
+                ->with('success', "Pendaftaran {$user->name} disahkan. Notifikasi WA terkirim dan Sertifikat dikirim via Email.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -105,6 +118,9 @@ class KepalaBumdesController extends Controller
     public function reject(Request $request, $id)
     {
         $user = User::with('mitra')->findOrFail($id);
+        $alasan = $request->pesan_penolakan ?? 'Tidak memenuhi kriteria BUMDes';
+        $no_hp = $user->mitra->no_hp ?? '';
+        $namaUser = $user->name;
 
         DB::transaction(function () use ($user) {
             if ($user->mitra) {
@@ -115,19 +131,60 @@ class KepalaBumdesController extends Controller
             $user->update(['status' => 'rejected']);
         });
 
+        // ✅ TAMBAHAN: Kirim WA Penolakan ke Mitra
+        if ($no_hp) {
+            $pesanWA = "Halo *{$namaUser}*,\n\nMohon maaf, pendaftaran Mitra BUMDes Anda *DITOLAK* pada tahap pengesahan akhir oleh Kepala BUMDes.\n\n*Alasan:* {$alasan}\n\nData berkas Anda telah kami bersihkan. Anda dapat mencoba mengajukan pendaftaran ulang setelah 30 hari.\n\nTerima kasih.\n\n*BUMDes Patimban*";
+            $this->kirimWA($no_hp, $pesanWA);
+        }
+
         return redirect()->route('kepala-bumdes.pengajuan')
-            ->with('success', 'Pengajuan telah ditolak.');
+            ->with('success', 'Pengajuan telah ditolak dan notifikasi penolakan dikirim ke Mitra.');
     }
 
- public function dataMitra()
-{
-    $mitras = Mitra::whereHas('user', function($q) {
-            $q->where('status', 'aktif');
-        })
-        ->latest()
-        ->get();
+    public function dataMitra()
+    {
+        $mitras = Mitra::whereHas('user', function($q) {
+                $q->where('status', 'aktif');
+            })
+            ->latest()
+            ->get();
 
-    return view('kepala-bumdes.data-mitra', compact('mitras'));
-}
+        return view('kepala-bumdes.data-mitra', compact('mitras'));
+    }
 
+    /**
+     * Helper untuk kirim pesan WA via Fonnte API (Hanya Teks)
+     */
+    private function kirimWA($no_hp, $pesan)
+    {
+        $token  = "obEnSgdDTVkALfwmMYTy"; // Token Fonnte
+        $target = preg_replace('/^0/', '62', $no_hp);
+
+        $postData = [
+            'target'      => $target,
+            'message'     => $pesan,
+            'countryCode' => '62',
+        ];
+
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => $postData,
+            CURLOPT_HTTPHEADER     => ["Authorization: $token"],
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ]);
+
+        $response = curl_exec($curl);
+        $error    = curl_error($curl);
+        curl_close($curl);
+
+        if ($error) {
+            Log::error("Fonnte Error (Kepala BUMDes): " . $error);
+        } else {
+            Log::info("Fonnte Response (Kepala BUMDes): " . $response);
+        }
+    }
 }

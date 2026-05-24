@@ -1,4 +1,4 @@
-@extends('theme.default')
+@extends('theme.customer')
 @section('title', 'Pembayaran - ' . $invoice)
 
 @section('content')
@@ -9,7 +9,7 @@
         <div class="max-w-3xl mx-auto flex items-center gap-2 text-xs text-slate-400">
             <a href="{{ route('customer.dashboard') }}" class="hover:text-orange-500 transition">Beranda</a>
             <i class="fas fa-chevron-right text-[10px]"></i>
-            <a href="{{ route('customer.cart') }}" class="hover:text-orange-500 transition">Keranjang</a>
+            <a href="{{ route('customer.cart.index') }}" class="hover:text-orange-500 transition">Keranjang</a>
             <i class="fas fa-chevron-right text-[10px]"></i>
             <span class="text-slate-600 font-medium">Pembayaran</span>
         </div>
@@ -31,12 +31,12 @@
         </div>
         @endif
 
-        {{-- BANNER POLLING (tersembunyi, muncul setelah GoPay dibuka) --}}
+        {{-- BANNER POLLING (untuk GoPay yang buka tab terpisah) --}}
         <div id="polling-info" class="hidden mb-4 flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-4 rounded-xl text-sm">
             <i class="fas fa-spinner fa-spin text-blue-500 mt-0.5 flex-shrink-0"></i>
             <div>
-                <p class="font-bold mb-0.5">Selesaikan pembayaran GoPay kamu</p>
-                <p class="text-blue-500 text-xs">Setelah selesai bayar, kembali ke halaman ini. Sistem akan otomatis mendeteksi pembayaran dan mengarahkan kamu ke invoice.</p>
+                <p class="font-bold mb-0.5">Menunggu konfirmasi pembayaran...</p>
+                <p class="text-blue-500 text-xs">Setelah selesai bayar, sistem akan otomatis mengarahkan kamu ke invoice.</p>
             </div>
         </div>
 
@@ -165,7 +165,7 @@
         var btn = document.getElementById('pay-button');
         btn.disabled = true;
         document.getElementById('pay-button-text').innerHTML =
-            '<i class="fas fa-spinner fa-spin mr-2"></i>Mengecek pembayaran...';
+            '<i class="fas fa-spinner fa-spin mr-2"></i>Menunggu konfirmasi...';
     }
 
     function resetButton() {
@@ -176,8 +176,8 @@
         document.getElementById('polling-info').classList.add('hidden');
     }
 
+    // Polling: digunakan hanya untuk GoPay/QRIS yang buka tab terpisah
     function startPolling() {
-        // Hindari double polling
         if (pollingTimer) clearInterval(pollingTimer);
 
         showPollingBanner();
@@ -187,9 +187,14 @@
             fetch(checkUrl)
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
-                    if (data.status === 'Lunas') {
-                        clearInterval(pollingTimer);
-                        window.location.href = invoiceUrl;
+                    // Redirect jika sudah Lunas ATAU pending (transaksi sudah dibuat)
+                    if (data.status === 'Lunas' || data.status === 'pending') {
+                        // Untuk Lunas → langsung ke invoice
+                        if (data.status === 'Lunas') {
+                            clearInterval(pollingTimer);
+                            window.location.href = invoiceUrl;
+                        }
+                        // Untuk pending → tetap polling, tunggu Lunas
                     }
                 })
                 .catch(function () {
@@ -208,18 +213,21 @@
     document.getElementById('pay-button').onclick = function () {
         snap.pay('{{ $snapToken }}', {
             onSuccess: function (result) {
-                // Langsung redirect (untuk metode selain GoPay)
+                // Pembayaran berhasil (credit card, transfer, dll) → langsung ke invoice
                 window.location.href = invoiceUrl;
             },
             onPending: function (result) {
-                // GoPay sandbox buka tab simulator terpisah — mulai polling
-                startPolling();
+                // Midtrans sandbox sering return pending meski sudah bayar
+                // Langsung redirect ke invoice — transaksi sudah tercatat
+                window.location.href = invoiceUrl;
             },
             onError: function (result) {
                 alert('Pembayaran gagal! Silakan coba lagi.');
+                resetButton();
             },
             onClose: function () {
-                // User tutup popup — cek apakah sudah bayar
+                // User tutup popup tanpa selesai bayar
+                // Mulai polling untuk deteksi jika sudah bayar via GoPay tab terpisah
                 startPolling();
             }
         });

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaksi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 
 class PesananController extends Controller
 {
@@ -14,7 +16,6 @@ class PesananController extends Controller
      */
     public function index()
     {
-        //  Membetulkan user_id menjadi customer_id
         $pesanan = Transaksi::where('customer_id', Auth::id())
             ->with(['produk', 'jasa'])
             ->latest()
@@ -28,7 +29,6 @@ class PesananController extends Controller
      */
     public function pending()
     {
-        //  Membetulkan user_id menjadi customer_id
         $pesanan = Transaksi::where('customer_id', Auth::id())
             ->where('status_pembayaran', 'pending')
             ->where('metode_pembayaran', '!=', 'po')
@@ -44,7 +44,6 @@ class PesananController extends Controller
      */
     public function dikemas()
     {
-        //  Membetulkan user_id menjadi customer_id
         $pesanan = Transaksi::where('customer_id', Auth::id())
             ->whereIn('status_pengiriman', ['Diproses', 'Dikemas'])
             ->with(['produk', 'jasa'])
@@ -59,7 +58,6 @@ class PesananController extends Controller
      */
     public function dikirim()
     {
-        //  Membetulkan user_id menjadi customer_id
         $pesanan = Transaksi::where('customer_id', Auth::id())
             ->where('status_pengiriman', 'Dikirim')
             ->with(['produk', 'jasa'])
@@ -74,9 +72,8 @@ class PesananController extends Controller
      */
     public function selesai()
     {
-        //  Membetulkan user_id menjadi customer_id
         $pesanan = Transaksi::where('customer_id', Auth::id())
-            ->where('status_pengiriman', 'Selesai')
+            ->whereIn('status_pengiriman', ['Diterima', 'Selesai']) // PO yang diterima juga masuk sini
             ->with(['produk', 'jasa'])
             ->latest()
             ->get();
@@ -89,7 +86,6 @@ class PesananController extends Controller
      */
     public function konfirmasiDiterima($invoice_number)
     {
-        //  Membetulkan user_id menjadi customer_id
         $transaksi = Transaksi::where('invoice_number', $invoice_number)
             ->where('customer_id', Auth::id())
             ->firstOrFail();
@@ -99,11 +95,19 @@ class PesananController extends Controller
         }
 
         if ($transaksi->metode_pembayaran === 'po') {
-            $transaksi->update(['status_pengiriman' => 'Lunas']);
+            // ✅ PERBAIKAN: Jika PO, statusnya jadi 'Diterima' (menunggu pelunasan Mitra)
+            $transaksi->update(['status_pengiriman' => 'Diterima']);
             $pesan = 'Konfirmasi berhasil. Menunggu konfirmasi lunas dari Mitra BUMDes.';
         } else {
+            // ✅ Jika bayar instan/non-PO, langsung 'Selesai'
             $transaksi->update(['status_pengiriman' => 'Selesai']);
             $pesan = 'Terima kasih! Pesanan Anda telah selesai.';
+        }
+
+        // ✅ KIRIM NOTIFIKASI KE MITRA BAHWA BARANG SUDAH DITERIMA CUSTOMER
+        $mitraUser = User::find($transaksi->mitra_id);
+        if ($mitraUser) {
+            $mitraUser->notify(new \App\Notifications\PesananDiterimaMitraNotification($transaksi->invoice_number, Auth::user()->name));
         }
 
         return redirect()->route('customer.pesanan.selesai')->with('success', $pesan);

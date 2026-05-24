@@ -1,109 +1,342 @@
-@extends('theme.default')
+@extends('theme.customer')
 
 @section('title', 'Beranda - BUMDes Patimban')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/customer/dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 @endpush
 
 @section('content')
-    {{-- 1. HEADER & PENCARIAN --}}
-    <div class="search-container mb-10">
-        <div class="search-input-wrapper w-full md:w-2/3 mx-auto md:mx-0 relative group">
-            <input type="text" placeholder="Cari produk BUMDes, jajanan, atau jasa..."
-                   class="w-full pl-14 pr-32 py-5 rounded-3xl border border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-slate-700">
-            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-            <button class="absolute right-2 top-2 bottom-2 bg-blue-600 text-white px-8 rounded-2xl text-sm font-bold hover:bg-blue-700 transition active:scale-95">
-                Cari
+
+{{-- TOP SEARCH BAR --}}
+{{-- TOP SEARCH BAR --}}
+
+
+<div class="page-wrapper">
+
+    {{-- SIDEBAR --}}
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+
+            {{-- Kategori --}}
+            <div class="filter-card">
+                <div class="filter-title"><i class="fas fa-th-large"></i> Kategori</div>
+                <ul class="category-list">
+                    <li>
+                        <a href="#" class="active" data-cat="all" onclick="filterCategory(event, 'all')">
+                            <i class="fas fa-border-all"></i> Semua
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-cat="produk" onclick="filterCategory(event, 'produk')">
+                            <i class="fas fa-box-open"></i> Produk
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-cat="jasa" onclick="filterCategory(event, 'jasa')">
+                            <i class="fas fa-tools"></i> Layanan Jasa
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            {{-- Filter Harga --}}
+            <div class="filter-card">
+                <div class="filter-title"><i class="fas fa-filter"></i> Filter Harga</div>
+
+                <div class="filter-label">Produk (Rp)</div>
+                <div class="price-inputs" style="margin-bottom: 12px;">
+                    <input type="number" id="produk-min" placeholder="Min" min="0">
+                    <span>–</span>
+                    <input type="number" id="produk-max" placeholder="Max" min="0">
+                </div>
+
+                <div class="filter-label">Jasa (Rp)</div>
+                <div class="price-inputs">
+                    <input type="number" id="jasa-min" placeholder="Min" min="0">
+                    <span>–</span>
+                    <input type="number" id="jasa-max" placeholder="Max" min="0">
+                </div>
+
+                <button class="filter-apply-btn" onclick="applyFilters()">
+                    <i class="fas fa-check"></i> Terapkan Filter
+                </button>
+                <button class="filter-reset-btn" onclick="resetFilters()">
+                    Reset
+                </button>
+            </div>
+
+            {{-- Tombol tutup sidebar mobile --}}
+            <button class="filter-apply-btn" style="display:none;" id="close-sidebar-btn" onclick="closeSidebar()">
+                Tutup
             </button>
         </div>
-    </div>
+    </aside>
 
-    {{-- 2. BANNER PROMO --}}
-    <div class="mb-12 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-500/20 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 relative">
-        <div class="flex items-center justify-between p-10 md:p-14">
-            <div class="text-white z-10 w-full md:w-2/3">
-                <span class="bg-yellow-400 text-blue-900 text-[10px] font-black uppercase px-4 py-1.5 rounded-full mb-4 inline-block tracking-widest shadow-lg">Promo Spesial</span>
-                <h2 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Dukung Produk<br>Lokal Patimban</h2>
-                <p class="text-blue-100 text-base opacity-90 leading-relaxed">Nikmati gratis ongkir untuk wilayah Patimban. Belanja mudah, cepat, dan aman langsung dari BUMDes.</p>
+    {{-- MAIN --}}
+    <main class="main-content">
+
+        {{-- Banner --}}
+        <div class="banner">
+            <div>
+                <span class="banner-badge">✦ Promo Spesial</span>
+                <h2>Dukung Produk<br>Lokal Patimban</h2>
+                <p>Gratis ongkir untuk wilayah Patimban. Belanja mudah, cepat, dan aman langsung dari BUMDes.</p>
             </div>
-            <div class="hidden md:block w-1/3 text-right">
-                <i class="fas fa-shopping-bag text-[150px] text-white opacity-10 transform rotate-12"></i>
+            <i class="fas fa-shopping-bag banner-icon"></i>
+        </div>
+
+        {{-- Mobile filter button --}}
+        <button class="mobile-filter-btn" id="mobile-filter-btn" onclick="openSidebar()">
+            <i class="fas fa-sliders-h"></i> Filter & Kategori
+        </button>
+
+        {{-- Sort bar --}}
+        <div class="sort-bar" id="sort-bar">
+            <span>Urutkan:</span>
+            <button class="sort-btn active" data-sort="default" onclick="setSort(this, 'default')">Terbaru</button>
+            <button class="sort-btn" data-sort="price-asc" onclick="setSort(this, 'price-asc')">Harga Terendah</button>
+            <button class="sort-btn" data-sort="price-desc" onclick="setSort(this, 'price-desc')">Harga Tertinggi</button>
+            <span class="results-count" id="results-count"></span>
+        </div>
+
+        {{-- ── SECTION JASA ── --}}
+        <div id="section-jasa">
+            <div class="section-header">
+                <h3><i class="fas fa-tools" style="color:#ee4d2d;font-size:14px;"></i>&nbsp; Layanan Jasa</h3>
+                <a href="#" class="see-all">Lihat Semua <i class="fas fa-chevron-right" style="font-size:10px;"></i></a>
+            </div>
+
+            <div class="jasa-grid" id="jasa-grid">
+                @forelse ($jasas as $jasa)
+                    <a href="{{ route('customer.jasa.show', $jasa->id) }}"
+                       class="jasa-card"
+                       data-name="{{ strtolower($jasa->nama_jasa) }}"
+                       data-price="{{ $jasa->harga }}"
+                       data-type="jasa">
+                        <img src="{{ asset('storage/' . $jasa->gambar) }}" alt="{{ $jasa->nama_jasa }}" class="jasa-img">
+                        <div class="jasa-info">
+                            <div class="jasa-name">{{ $jasa->nama_jasa }}</div>
+                            <div class="jasa-price">Rp {{ number_format($jasa->harga, 0, ',', '.') }}</div>
+                            <div class="jasa-meta">
+                                <span class="badge-tersedia">Tersedia</span>
+                                <span class="star-row"><i class="fas fa-star"></i> 4.9</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#ddd;font-size:12px;margin-left:auto;flex-shrink:0;"></i>
+                    </a>
+                @empty
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <i class="fas fa-tools"></i>
+                        <p>Belum ada layanan jasa tersedia.</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="no-results" id="no-results-jasa">
+                <i class="fas fa-search"></i>
+                <p>Tidak ada jasa yang sesuai filter.</p>
+                <button onclick="resetFilters()">Reset Filter</button>
             </div>
         </div>
-    </div>
 
-    {{-- 3. KATEGORI --}}
-    <div class="mb-12">
-        <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest px-1">Kategori Utama</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="#" class="flex items-center gap-6 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-xl transition-all duration-300 group">
-                <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center shrink-0 group-hover:bg-blue-600 transition-all duration-300">
-                    <i class="fas fa-box-open text-3xl text-blue-600 group-hover:text-white transition"></i>
-                </div>
-                <div>
-                    <h4 class="text-xl font-extrabold text-slate-800 mb-1">Katalog Produk</h4>
-                    <p class="text-sm text-slate-500">Sembako, jajanan, dan kerajinan lokal.</p>
-                </div>
-            </a>
-            <a href="#" class="flex items-center gap-6 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:border-emerald-200 hover:shadow-xl transition-all duration-300 group">
-                <div class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center shrink-0 group-hover:bg-emerald-500 transition-all duration-300">
-                    <i class="fas fa-tools text-3xl text-emerald-600 group-hover:text-white transition"></i>
-                </div>
-                <div>
-                    <h4 class="text-xl font-extrabold text-slate-800 mb-1">Layanan Jasa</h4>
-                    <p class="text-sm text-slate-500">Bengkel, pangkas rambut, dan lainnya.</p>
-                </div>
-            </a>
-        </div>
-    </div>
+        <div style="height: 16px;"></div>
 
-    {{-- 4. LAYANAN JASA --}}
-    <div class="mb-12">
-        <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest px-1">Layanan Jasa</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            @forelse ($jasas as $jasa)
-                <a href="{{ route('customer.jasa.show', $jasa->id) }}" class="group flex items-center gap-5 p-5 bg-white rounded-3xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg transition-all duration-300">
-                    <div class="w-24 h-24 bg-slate-100 relative overflow-hidden rounded-2xl">
-                        <img src="{{ asset('storage/' . $jasa->gambar) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    </div>
-                    <div class="flex-grow">
-                        <h4 class="text-base font-bold text-slate-800 mb-1">{{ $jasa->nama_jasa }}</h4>
-                        <p class="text-sm font-black text-rose-500 mb-2">Rp {{ number_format($jasa->harga, 0, ',', '.') }}</p>
-                        <div class="text-xs text-slate-400 font-medium">
-                            <i class="fas fa-star text-yellow-400"></i> 4.9 | Tersedia
+        {{-- ── SECTION PRODUK ── --}}
+        <div id="section-produk">
+            <div class="section-header">
+                <h3><i class="fas fa-box-open" style="color:#ee4d2d;font-size:14px;"></i>&nbsp; Rekomendasi Produk</h3>
+                <a href="#" class="see-all">Lihat Semua <i class="fas fa-chevron-right" style="font-size:10px;"></i></a>
+            </div>
+
+            <div class="produk-grid" id="produk-grid" style="margin-top:8px;">
+                @forelse ($produks as $produk)
+                    <a href="{{ route('customer.produk.show', $produk->id) }}"
+                       class="produk-card"
+                       data-name="{{ strtolower($produk->nama_produk) }}"
+                       data-price="{{ $produk->harga }}"
+                       data-stok="{{ $produk->jumlah }}"
+                       data-type="produk">
+                        <div class="produk-img-wrap">
+                            <img src="{{ asset('storage/' . $produk->gambar) }}" alt="{{ $produk->nama_produk }}" loading="lazy">
+                            <span class="produk-badge">BUMDES</span>
                         </div>
-                    </div>
-                </a>
-            @empty
-                <p class="text-slate-400 italic px-2">Belum ada layanan jasa tersedia.</p>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- 5. REKOMENDASI PRODUK --}}
-    <div class="mb-20">
-        <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest px-1">Rekomendasi Untukmu</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            @forelse ($produks as $produk)
-                <a href="{{ route('customer.produk.show', $produk->id) }}" class="group block bg-white rounded-3xl overflow-hidden border border-slate-100 hover:shadow-2xl hover:border-blue-100 transition-all duration-300">
-                    <div class="aspect-square bg-slate-50 relative overflow-hidden">
-                        <img src="{{ asset('storage/' . $produk->gambar) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                        <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-slate-800 text-[9px] font-black px-2 py-1 rounded-lg shadow-sm">BUMDES</div>
-                    </div>
-                    <div class="p-4">
-                        <h4 class="text-sm font-bold text-slate-800 line-clamp-1 mb-1">{{ $produk->nama_produk }}</h4>
-                        <div class="text-sm font-black text-rose-600 mb-2">Rp {{ number_format($produk->harga, 0, ',', '.') }}</div>
-                        <div class="flex items-center text-[11px] text-slate-400 font-medium">
-                            <i class="fas fa-star text-yellow-400 mr-1"></i> 4.9 | Stok: {{ $produk->jumlah }}
+                        <div class="produk-info">
+                            <div class="produk-name">{{ $produk->nama_produk }}</div>
+                            <div class="produk-price">Rp {{ number_format($produk->harga, 0, ',', '.') }}</div>
+                            <div class="produk-meta">
+                                <i class="fas fa-star"></i> 4.9 · Stok: {{ $produk->jumlah }}
+                            </div>
                         </div>
+                    </a>
+                @empty
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <p>Belum ada produk tersedia saat ini.</p>
                     </div>
-                </a>
-            @empty
-                <div class="col-span-full text-center py-16 text-slate-400 italic">
-                    Belum ada produk tersedia saat ini.
-                </div>
-            @endforelse
+                @endforelse
+            </div>
+
+            <div class="no-results" id="no-results-produk">
+                <i class="fas fa-search"></i>
+                <p>Tidak ada produk yang sesuai filter.</p>
+                <button onclick="resetFilters()">Reset Filter</button>
+            </div>
         </div>
-    </div>
+
+    </main>
+</div>
+
+<script>
+    /* ── STATE ── */
+    let currentSort = 'default';
+    let currentCategory = 'all';
+    let activeFilters = { produkMin: 0, produkMax: Infinity, jasaMin: 0, jasaMax: Infinity };
+    let searchQuery = '';
+
+    /* ── SEARCH ── */
+    function doSearch() {
+        searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+        const searchType = document.getElementById('search-type').value;
+
+        /* Update category filter berdasarkan tipe pencarian */
+        if (searchType === 'produk') filterCategory(null, 'produk');
+        else if (searchType === 'jasa') filterCategory(null, 'jasa');
+        else filterCategory(null, 'all');
+
+        applyAll();
+    }
+
+    document.getElementById('search-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doSearch();
+    });
+
+    /* ── CATEGORY ── */
+    function filterCategory(e, cat) {
+        if (e) e.preventDefault();
+        currentCategory = cat;
+
+        document.querySelectorAll('.category-list a').forEach(a => a.classList.remove('active'));
+        const target = document.querySelector(`.category-list a[data-cat="${cat}"]`);
+        if (target) target.classList.add('active');
+
+        const jasaSection = document.getElementById('section-jasa');
+        const produkSection = document.getElementById('section-produk');
+
+        jasaSection.style.display = (cat === 'produk') ? 'none' : 'block';
+        produkSection.style.display = (cat === 'jasa') ? 'none' : 'block';
+
+        applyAll();
+    }
+
+    /* ── SORT ── */
+    function setSort(btn, sort) {
+        currentSort = sort;
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyAll();
+    }
+
+    /* ── FILTER ── */
+    function applyFilters() {
+        activeFilters.produkMin = parseFloat(document.getElementById('produk-min').value) || 0;
+        activeFilters.produkMax = parseFloat(document.getElementById('produk-max').value) || Infinity;
+        activeFilters.jasaMin   = parseFloat(document.getElementById('jasa-min').value) || 0;
+        activeFilters.jasaMax   = parseFloat(document.getElementById('jasa-max').value) || Infinity;
+        applyAll();
+        /* Tutup sidebar di mobile */
+        if (window.innerWidth <= 768) closeSidebar();
+    }
+
+    function resetFilters() {
+        ['produk-min','produk-max','jasa-min','jasa-max'].forEach(id => document.getElementById(id).value = '');
+        activeFilters = { produkMin: 0, produkMax: Infinity, jasaMin: 0, jasaMax: Infinity };
+        searchQuery = '';
+        document.getElementById('search-input').value = '';
+        document.getElementById('search-type').value = 'all';
+        currentSort = 'default';
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.sort-btn[data-sort="default"]').classList.add('active');
+        filterCategory(null, 'all');
+    }
+
+    /* ── CORE: APPLY ALL FILTERS + SORT + SEARCH ── */
+    function applyAll() {
+        applyToGrid('jasa-grid', 'jasa', activeFilters.jasaMin, activeFilters.jasaMax);
+        applyToGrid('produk-grid', 'produk', activeFilters.produkMin, activeFilters.produkMax);
+        updateCount();
+    }
+
+    function applyToGrid(gridId, type, minPrice, maxPrice) {
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+
+        const items = Array.from(grid.querySelectorAll(`[data-type="${type}"]`));
+        let visible = [];
+
+        items.forEach(item => {
+            const price = parseFloat(item.dataset.price) || 0;
+            const name  = item.dataset.name || '';
+            const matchSearch = !searchQuery || name.includes(searchQuery);
+            const matchPrice  = price >= minPrice && price <= maxPrice;
+
+            if (matchSearch && matchPrice) {
+                item.style.display = '';
+                visible.push(item);
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        /* Sort visible items */
+        if (currentSort !== 'default' && visible.length > 0) {
+            visible.sort((a, b) => {
+                const pa = parseFloat(a.dataset.price) || 0;
+                const pb = parseFloat(b.dataset.price) || 0;
+                return currentSort === 'price-asc' ? pa - pb : pb - pa;
+            });
+            visible.forEach(item => grid.appendChild(item));
+        }
+
+        /* Tampilkan no-results */
+        const noResults = document.getElementById(`no-results-${type}`);
+        if (noResults) noResults.style.display = visible.length === 0 ? 'block' : 'none';
+    }
+
+    function updateCount() {
+        const visibleProduk = document.querySelectorAll('#produk-grid [data-type="produk"]:not([style*="display: none"])').length;
+        const visibleJasa   = document.querySelectorAll('#jasa-grid [data-type="jasa"]:not([style*="display: none"])').length;
+        const total = visibleProduk + visibleJasa;
+        const el = document.getElementById('results-count');
+        if (el) {
+            if (searchQuery || activeFilters.produkMax !== Infinity || activeFilters.jasaMax !== Infinity) {
+                el.textContent = `${total} hasil ditemukan`;
+            } else {
+                el.textContent = '';
+            }
+        }
+    }
+
+    /* ── MOBILE SIDEBAR ── */
+    function openSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.add('mobile-open');
+        document.getElementById('close-sidebar-btn').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.remove('mobile-open');
+        document.getElementById('close-sidebar-btn').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    /* Klik overlay = tutup sidebar */
+    document.getElementById('sidebar').addEventListener('click', function(e) {
+        if (e.target === this) closeSidebar();
+    });
+</script>
+
 @endsection

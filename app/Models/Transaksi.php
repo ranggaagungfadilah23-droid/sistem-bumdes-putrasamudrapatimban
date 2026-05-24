@@ -38,4 +38,28 @@ class Transaksi extends Model
     {
         return $this->belongsTo(User::class, 'mitra_id');
     }
+
+     public function ulasan()
+    {
+        return $this->hasOne(Ulasan::class, 'invoice_number', 'invoice_number');
+    }
+
+    // ===== HELPER =====
+
+    /**
+     * Cek apakah transaksi sudah bisa diulas
+     * (status pengiriman Selesai atau Diterima)
+     */
+    public function bisaDiulas(): bool
+    {
+        return in_array($this->status_pengiriman, ['Selesai', 'Diterima']);
+    }
+
+    /**
+     * Cek apakah transaksi sudah diulas
+     */
+    public function sudahDiulas(): bool
+    {
+        return $this->ulasan()->exists();
+    }
 }

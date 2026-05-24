@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    /**
-     * Menampilkan daftar keranjang belanja
-     */
     public function index()
     {
         $userId = Auth::id();
@@ -25,9 +22,6 @@ class CartController extends Controller
         return view('customer.cart', compact('carts', 'totalHarga'));
     }
 
-    /**
-     * Menambah produk ke keranjang
-     */
     public function add(Request $request)
     {
         if (!$request->produk_id && !$request->jasa_id) {
@@ -36,17 +30,14 @@ class CartController extends Controller
 
         $userId = Auth::id();
 
-        // Cek apakah sudah ada di cart
         $cart = Cart::where('user_id', $userId)
             ->where('produk_id', $request->produk_id ?: null)
             ->where('jasa_id', $request->jasa_id ?: null)
             ->first();
 
         if ($cart) {
-            // Tambah jumlah jika sudah ada
             $cart->increment('jumlah', $request->jumlah ?? 1);
         } else {
-            // Buat baru jika belum ada
             $cart = Cart::create([
                 'user_id'   => $userId,
                 'produk_id' => $request->produk_id ?: null,
@@ -55,18 +46,14 @@ class CartController extends Controller
             ]);
         }
 
-        // Jika dari tombol "Beli Sekarang"
-        if ($request->buy_now) {
+        if ($request->action === 'buy' || $request->buy_now) {
             session(['buy_now_cart_id' => $cart->id]);
-            return redirect()->route('checkout.buynow');
+            return redirect()->route('customer.checkout.buynow');
         }
 
         return back()->with('success', 'Berhasil ditambahkan ke keranjang!');
     }
 
-    /**
-     * Menambah jasa ke keranjang
-     */
     public function addJasa(Request $request, $id)
     {
         $userId = Auth::id();
@@ -87,18 +74,14 @@ class CartController extends Controller
             ]);
         }
 
-        // Jika dari tombol "Beli Sekarang" di halaman jasa
-        if ($request->buy_now) {
+        if ($request->action === 'buy' || $request->buy_now) {
             session(['buy_now_cart_id' => $cart->id]);
-            return redirect()->route('checkout.buynow');
+            return redirect()->route('customer.checkout.buynow');
         }
 
         return back()->with('success', 'Jasa berhasil ditambahkan ke keranjang!');
     }
 
-    /**
-     * Menghapus item dari keranjang
-     */
     public function remove($id)
     {
         $cartItem = Cart::where('user_id', Auth::id())->findOrFail($id);
@@ -107,9 +90,6 @@ class CartController extends Controller
         return back()->with('success', 'Item berhasil dihapus!');
     }
 
-    /**
-     * Mengosongkan keranjang
-     */
     public function clear()
     {
         Cart::where('user_id', Auth::id())->delete();

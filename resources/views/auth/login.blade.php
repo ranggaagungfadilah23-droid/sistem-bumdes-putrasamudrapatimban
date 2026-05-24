@@ -3,11 +3,15 @@
     {{-- Status session (misal: setelah reset password) --}}
     <x-auth-session-status class="status-success" :status="session('status')" />
 
-    {{-- Error validasi --}}
+    {{-- Error validasi dengan terjemahan bahasa Indonesia --}}
     @if ($errors->any())
         <div class="status-error">
             <i class="fas fa-circle-exclamation" style="margin-right:6px;"></i>
-            {{ $errors->first() }}
+            @if ($errors->first() == 'These credentials do not match our records.')
+                Email atau kata sandi yang Anda masukkan salah.
+            @else
+                {{ $errors->first() }}
+            @endif
         </div>
     @endif
 
@@ -20,7 +24,7 @@
 
     {{-- Judul --}}
     <h2 class="card-title">Masuk ke Akun</h2>
-    <p class="card-sub">Selamat datang di platform kami</p>
+    <p class="card-sub">Selamat datang kembali di platform BUMDes</p>
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
@@ -77,8 +81,8 @@
             <div class="divider-line"></div>
         </div>
 
-        {{-- Google --}}
-        <a href="{{ route('auth.google.redirect') }}" class="btn-google">
+        {{-- Login Google (Perbaikan URL) --}}
+        <a href="{{ url('/auth/google') }}" class="btn-google">
             <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
             <span>Lanjutkan dengan Google</span>
         </a>

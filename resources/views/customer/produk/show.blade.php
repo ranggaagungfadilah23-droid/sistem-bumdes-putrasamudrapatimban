@@ -65,12 +65,8 @@
                 {{-- DETAIL --}}
                 <div class="p-8 flex flex-col justify-between">
                     <div>
-                        {{-- Nama --}}
-                        <h1 class="text-2xl font-bold text-slate-800 leading-snug mb-3">
-                            {{ $produk->nama_produk }}
-                        </h1>
+                        <h1 class="text-2xl font-bold text-slate-800 leading-snug mb-3">{{ $produk->nama_produk }}</h1>
 
-                        {{-- Harga --}}
                         <div class="bg-orange-50 border border-orange-100 rounded-xl px-5 py-4 mb-5">
                             <p class="text-xs text-slate-400 mb-1">Harga produk</p>
                             <p class="text-3xl font-black text-orange-500">
@@ -87,141 +83,71 @@
                                 <p class="text-xs text-slate-400">Penjual</p>
                                 <p class="text-sm font-bold text-slate-700">{{ $produk->user->name ?? 'Mitra BUMDes' }}</p>
                             </div>
-                            <div class="ml-auto flex items-center gap-1 text-yellow-400 text-xs font-bold">
-                                <i class="fas fa-star"></i> 5.0
-                            </div>
-                        </div>
-
-                        {{-- Info Garansi & Pengiriman --}}
-                        <div class="flex flex-col gap-2 mb-5">
-                            <div class="flex items-center gap-2 text-sm text-slate-500">
-                                <i class="fas fa-shield-alt text-orange-400 w-4"></i>
-                                <span>Garansi Keamanan Produk</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-sm text-slate-500">
-                                <i class="fas fa-truck text-orange-400 w-4"></i>
-                                <span>Pengiriman Cepat & Terpercaya</span>
-                            </div>
                         </div>
 
                         {{-- Deskripsi --}}
                         <div class="mb-6">
-                            <h3 class="text-sm font-black text-slate-700 uppercase tracking-wider mb-2">
-                                Deskripsi Produk
-                            </h3>
-                            <p class="text-sm text-slate-500 leading-relaxed">
-                                {{ $produk->deskripsi }}
-                            </p>
+                            <h3 class="text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Deskripsi Produk</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">{{ $produk->deskripsi }}</p>
                         </div>
                     </div>
 
                     {{-- FORM ORDER --}}
                     <div>
-                        {{-- Quantity --}}
                         <div class="mb-5">
                             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jumlah</p>
                             <div class="flex items-center gap-4">
                                 <div class="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
-                                    <button type="button" id="btnMinus" onclick="changeQty(-1)"
-                                            class="w-11 h-11 flex items-center justify-center hover:bg-orange-50 hover:text-orange-500 text-slate-600 font-bold transition text-lg">
-                                        −
-                                    </button>
-                                    <input type="number" id="jumlahDisplay" value="1" min="1" max="{{ $produk->jumlah }}"
-                                           class="w-14 text-center font-bold text-slate-800 border-x-2 border-slate-200 h-11 outline-none text-sm" readonly>
-                                    <button type="button" id="btnPlus" onclick="changeQty(1)"
-                                            class="w-11 h-11 flex items-center justify-center hover:bg-orange-50 hover:text-orange-500 text-slate-600 font-bold transition text-lg">
-                                        +
-                                    </button>
+                                    <button type="button" id="btnMinus" onclick="changeQty(-1)" class="w-11 h-11 flex items-center justify-center hover:bg-orange-50 text-slate-600 font-bold transition text-lg">−</button>
+                                    <input type="number" id="jumlahDisplay" value="1" min="1" max="{{ $produk->jumlah }}" class="w-14 text-center font-bold text-slate-800 border-x-2 border-slate-200 h-11 outline-none text-sm" readonly>
+                                    <button type="button" id="btnPlus" onclick="changeQty(1)" class="w-11 h-11 flex items-center justify-center hover:bg-orange-50 text-slate-600 font-bold transition text-lg">+</button>
                                 </div>
-                                <span class="text-xs text-slate-400">
-                                    <i class="fas fa-info-circle mr-1 text-orange-400"></i>
-                                    Stok: <strong class="text-orange-500">{{ $produk->jumlah }}</strong>
-                                </span>
+                                <span class="text-xs text-slate-400">Stok: <strong>{{ $produk->jumlah }}</strong></span>
                             </div>
                         </div>
 
-                        {{-- Tombol --}}
-                        <div class="flex gap-3">
-                            {{-- Tambah ke Keranjang --}}
-                            <form action="{{ route('cart.add', $produk->id) }}" method="POST" class="flex-1">
+                        {{-- Tombol Aksi --}}
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <form action="{{ route('customer.cart.add') }}" method="POST" class="flex-1">
                                 @csrf
                                 <input type="hidden" name="produk_id" value="{{ $produk->id }}">
                                 <input type="hidden" name="jumlah" id="jumlahKeranjang" value="1">
-                                <button type="submit"
-                                        class="w-full flex items-center justify-center gap-2 border-2 border-orange-500 text-orange-500 bg-orange-50 py-3.5 rounded-xl font-bold text-sm hover:bg-orange-100 transition-all">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    Keranjang
+                                <button type="submit" class="w-full flex items-center justify-center gap-2 border-2 border-orange-500 text-orange-500 bg-orange-50 py-3.5 rounded-xl font-bold text-sm hover:bg-orange-100 transition-all">
+                                    <i class="fas fa-shopping-cart"></i> Keranjang
                                 </button>
                             </form>
 
-                            {{-- Beli Sekarang --}}
-                            <form action="{{ route('cart.add', $produk->id) }}" method="POST" class="flex-1">
+                            <form action="{{ route('customer.cart.add') }}" method="POST" class="flex-1">
                                 @csrf
                                 <input type="hidden" name="buy_now" value="1">
                                 <input type="hidden" name="produk_id" value="{{ $produk->id }}">
                                 <input type="hidden" name="jumlah" id="jumlahBeli" value="1">
-                                <button type="submit"
-                                        class="w-full flex items-center justify-center gap-2 bg-orange-500 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-200">
-                                    <i class="fas fa-bolt"></i>
-                                    Beli Sekarang
+                                <button type="submit" class="w-full flex items-center justify-center gap-2 bg-orange-500 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-200">
+                                    <i class="fas fa-bolt"></i> Beli Sekarang
                                 </button>
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
-
-        {{-- JAMINAN --}}
-        <div class="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-4">
-            <div class="grid grid-cols-3 gap-4 text-center">
-                <div class="flex flex-col items-center gap-1.5">
-                    <i class="fas fa-shield-alt text-orange-500 text-lg"></i>
-                    <p class="text-[11px] font-bold text-slate-600">Terpercaya</p>
-                    <p class="text-[10px] text-slate-400">Mitra terverifikasi BUMDes</p>
-                </div>
-                <div class="flex flex-col items-center gap-1.5">
-                    <i class="fas fa-truck text-orange-500 text-lg"></i>
-                    <p class="text-[11px] font-bold text-slate-600">Pengiriman Cepat</p>
-                    <p class="text-[10px] text-slate-400">Aman sampai di tangan</p>
-                </div>
-                <div class="flex flex-col items-center gap-1.5">
-                    <i class="fas fa-medal text-orange-500 text-lg"></i>
-                    <p class="text-[11px] font-bold text-slate-600">Kualitas Terjamin</p>
-                    <p class="text-[10px] text-slate-400">Produk terbaik desa</p>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>
 
 <script>
     function changeQty(delta) {
-        const display   = document.getElementById('jumlahDisplay');
+        const display = document.getElementById('jumlahDisplay');
         const inputKeranjang = document.getElementById('jumlahKeranjang');
         const inputBeli = document.getElementById('jumlahBeli');
-        const btnMinus  = document.getElementById('btnMinus');
-        const btnPlus   = document.getElementById('btnPlus');
-        const maxQty    = parseInt(display.getAttribute('max'));
+        const maxQty = parseInt(display.getAttribute('max'));
 
         let val = parseInt(display.value) + delta;
         if (val < 1) val = 1;
         if (val > maxQty) val = maxQty;
 
-        display.value       = val;
+        display.value = val;
         inputKeranjang.value = val;
-        inputBeli.value     = val;
-
-        btnMinus.disabled = val <= 1;
-        btnPlus.disabled  = val >= maxQty;
+        inputBeli.value = val;
     }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const max = parseInt(document.getElementById('jumlahDisplay').getAttribute('max'));
-        document.getElementById('btnMinus').disabled = true;
-        document.getElementById('btnPlus').disabled  = max <= 1;
-    });
 </script>
 @endsection

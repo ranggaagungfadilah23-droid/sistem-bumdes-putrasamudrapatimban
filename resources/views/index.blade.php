@@ -6,187 +6,419 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BUMDes Putra Samudra Patimban</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
-    {{-- 1. HERO SECTION --}}
-  <div class="hero-bg" id="beranda" style="background-image: url('{{ asset('asset/img/berandabg.jpg') }}');">
-        <div class="overlay"></div>
-        <header id="main-navbar">
-    <div class="top-left">
-        <div class="brand">PUTRA SAMUDRA PATIMBAN</div>
-        <div class="clock" id="live-clock">00:00:00</div>
-        <div class="date" id="live-date">Memuat tanggal...</div>
-    </div>
-    <div class="nav-links">
-      <a href="#beranda" class="glass-btn">Beranda</a>
-        <a href="#tentang" class="glass-btn">Tentang</a>
-        <a href="{{ route('login') }}" class="glass-btn">Login</a>
-        <a href="{{ route('register') }}" class="glass-btn">Register</a>
-    </div>
-</header>
+    <!-- NAVBAR -->
+    <header id="main-navbar">
+        <div class="nav-brand">
+            <div class="brand-name">Putra Samudra Patimban</div>
+            <div class="brand-clock" id="live-clock">00:00:00</div>
+            <div class="brand-date" id="live-date">Memuat tanggal...</div>
+        </div>
 
-        <div class="main-content">
-            <div class="badge">Badan Usaha Milik Desa</div>
-            <h1 class="title-main">PUTRA SAMUDRA<br>PATIMBAN</h1>
-            <div class="action-btns">
-                <a href="{{ route('register.mitra') }}" class="glass-btn">Daftar menjadi Mitra</a>
-                <a href="#kategori" class="btn-primary">Jelajahi Produk</a>
+        <nav class="nav-links nav-desktop">
+            <a href="#beranda" class="nav-link">Beranda</a>
+            <a href="#tentang"  class="nav-link">Tentang</a>
+            <a href="#kategori" class="nav-link">Layanan</a>
+            <a href="{{ route('login') }}"    class="nav-link">Masuk</a>
+            <a href="{{ route('register') }}" class="nav-link cta">Daftar</a>
+        </nav>
+
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Buka menu" aria-expanded="false">
+            <span class="hbar"></span>
+            <span class="hbar"></span>
+            <span class="hbar"></span>
+        </button>
+    </header>
+
+    <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+        <div class="drawer-inner">
+            <a href="#beranda" class="drawer-link" data-drawer-close>
+                <i class="fas fa-home"></i> Beranda
+            </a>
+            <a href="#tentang" class="drawer-link" data-drawer-close>
+                <i class="fas fa-info-circle"></i> Tentang
+            </a>
+            <a href="#kategori" class="drawer-link" data-drawer-close>
+                <i class="fas fa-th-large"></i> Layanan
+            </a>
+            <div class="drawer-divider"></div>
+            <div class="drawer-actions">
+                <a href="{{ route('login') }}"    class="drawer-btn outline">Masuk</a>
+                <a href="{{ route('register') }}" class="drawer-btn gold">Daftar</a>
             </div>
         </div>
     </div>
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
 
-    {{-- 2. SECTION TENTANG --}}
-    <section id="tentang" style="padding: 100px 8%; background-color: #ffffff;">
-        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 60px;">
-            <div style="flex: 1; min-width: 320px;">
-                <div style="display: inline-block; padding: 8px 20px; background: #f1f5f9; color: #8a9a5b; border-radius: 50px; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-                    Profil BUMDes
+
+    <!-- ===================================================
+         HERO
+         =================================================== -->
+    <section class="hero" id="beranda">
+        <img
+            class="hero-img"
+            src="{{ asset('asset/img/berandabg.jpg') }}"
+            alt="Pantai Patimban"
+        >
+        <div class="hero-overlay"></div>
+
+        <!-- Scroll indicator -->
+        <div class="hero-scroll-hint">
+            <p>Scroll</p>
+            <div class="scroll-line"></div>
+        </div>
+
+    
+
+        <!-- Main copy -->
+        <div class="hero-content">
+            <div class="hero-tag">
+                <span></span>
+                Badan Usaha Milik Desa
+            </div>
+            <h1 class="hero-title">
+                Putra<br>
+                <em>Samudra</em><br>
+                Patimban
+            </h1>
+            <p class="hero-desc">
+                Menggerakkan ekonomi desa melalui ekosistem perdagangan digital yang transparan dan menguntungkan seluruh warga.
+            </p>
+            <div class="hero-actions">
+                <a href="{{ route('register.mitra') }}" class="btn-gold">
+                    <i class="fas fa-handshake"></i>
+                    Jadi Mitra
+                </a>
+                <a href="#kategori" class="btn-outline">
+                    <i class="fas fa-compass"></i>
+                    Jelajahi Produk
+                </a>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ===================================================
+         TENTANG
+         =================================================== -->
+    <section id="tentang" class="section">
+        <div class="about-text reveal">
+            <div class="label-tag">
+                <i class="fas fa-anchor" style="font-size:0.65rem;"></i>
+                Profil BUMDes
+            </div>
+            <h2 class="section-heading">
+                Mendorong Kemandirian<br>Ekonomi Desa Patimban
+            </h2>
+            <p class="section-sub">
+                BUMDes Putra Samudra Patimban menjembatani para pelaku UKM desa dengan pelanggan — menciptakan ekosistem perdagangan yang sehat, modern, dan berdampak nyata bagi warga.
+            </p>
+
+            <div class="about-pillars">
+                <div class="pillar reveal reveal-delay-1">
+                    <div class="pillar-icon" style="background:#fef9ec;">
+                        <i class="fas fa-bullseye" style="color:#c9a84c;"></i>
+                    </div>
+                    <h5>Visi</h5>
+                    <p>Pilar ekonomi desa yang modern dan berdaya saing tinggi.</p>
                 </div>
-                <h2 style="font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 25px; line-height: 1.1; letter-spacing: -1px;">
-                    Mendorong Ekonomi Desa Melalui Kemandirian
-                </h2>
-                <p style="color: #64748b; line-height: 1.8; font-size: 16px; margin-bottom: 30px;">
-                    BUMDes Putra Samudra Patimban merupakan penggerak ekonomi Desa Patimban yang mengelola berbagai potensi lokal. Kami menjembatani para mitra usaha (UKM) dengan pelanggan untuk menciptakan ekosistem perdagangan yang sehat, transparan, dan menguntungkan bagi seluruh warga desa.
+                <div class="pillar reveal reveal-delay-2">
+                    <div class="pillar-icon" style="background:#eff6ff;">
+                        <i class="fas fa-users" style="color:#3b82f6;"></i>
+                    </div>
+                    <h5>Misi</h5>
+                    <p>Pemberdayaan mitra lokal dan digitalisasi layanan desa.</p>
+                </div>
+                <div class="pillar reveal reveal-delay-3">
+                    <div class="pillar-icon" style="background:#ecfdf5;">
+                        <i class="fas fa-leaf" style="color:#10b981;"></i>
+                    </div>
+                    <h5>Nilai</h5>
+                    <p>Transparansi, kolaborasi, dan keberlanjutan komunitas.</p>
+                </div>
+                <div class="pillar reveal reveal-delay-4">
+                    <div class="pillar-icon" style="background:#fdf4ff;">
+                        <i class="fas fa-star" style="color:#a855f7;"></i>
+                    </div>
+                    <h5>Komitmen</h5>
+                    <p>Memberikan dampak ekonomi nyata bagi seluruh warga desa.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-visual reveal reveal-delay-2">
+            <div class="about-deco"></div>
+            <div class="about-img-wrap">
+                <img src="{{ asset('asset/img/berandabg.jpg') }}" alt="Patimban">
+            </div>
+            <div class="about-badge">
+                <strong>10+</strong>
+                <span>Tahun Melayani Desa</span>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ===================================================
+         KATEGORI
+         =================================================== -->
+    <section id="kategori" class="section">
+        <div class="kategori-header reveal">
+            <div class="label-tag">
+                <i class="fas fa-th-large" style="font-size:0.65rem;"></i>
+                Layanan Kami
+            </div>
+            <h2 class="section-heading">Katalog &amp; Layanan</h2>
+            <p class="section-sub">
+                Produk fisik dan jasa profesional dari warga desa, tersedia dalam satu platform terpadu.
+            </p>
+        </div>
+
+        <div class="kategori-grid">
+            <!-- Produk -->
+            <div class="kat-card blue reveal reveal-delay-1">
+                <div class="kat-icon-wrap">
+                    <i class="fas fa-box-open" style="color:#3b82f6;"></i>
+                </div>
+                <h3>Katalog Produk</h3>
+                <p>
+                    Sembako, kuliner khas Patimban, olahan laut segar, hingga kerajinan tangan kreatif — langsung dari produsen desa.
                 </p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="padding: 25px; border-radius: 24px; background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <i class="fas fa-bullseye" style="color: #8a9a5b; font-size: 24px; margin-bottom: 15px;"></i>
-                        <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Visi Kami</h4>
-                        <p style="font-size: 13px; color: #64748b; line-height: 1.5;">Menjadi pilar ekonomi desa yang modern dan berdaya saing global.</p>
-                    </div>
-                    <div style="padding: 25px; border-radius: 24px; background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <i class="fas fa-users" style="color: #3b82f6; font-size: 24px; margin-bottom: 15px;"></i>
-                        <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Misi Kami</h4>
-                        <p style="font-size: 13px; color: #64748b; line-height: 1.5;">Pemberdayaan mitra lokal dan digitalisasi layanan publik desa.</p>
-                    </div>
-                </div>
-            </div>
-            <div style="flex: 1; min-width: 320px; position: relative;">
-                <div style="position: absolute; top: -20px; left: -20px; width: 100px; height: 100px; background: #8a9a5b; border-radius: 24px; z-index: -1;"></div>
-                <img src="{{ asset('asset/img/berandabg.jpg') }}" alt="Profil BUMDes" style="width: 100%; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.12); object-fit: cover;">
-            </div>
-        </div>
-    </section>
-
-    {{-- 3. SECTION KATEGORI UTAMA --}}
-    <section id="kategori" style="padding: 100px 8%; background-color: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
-        <div style="text-align: center; max-width: 700px; margin: 0 auto 60px;">
-            <h2 style="font-size: 36px; font-weight: 800; color: #1e293b; margin-bottom: 15px;">Layanan & Katalog</h2>
-            <p style="color: #64748b; font-size: 16px;">Pilih kategori kebutuhan Anda. Kami menyediakan berbagai produk fisik dan layanan jasa profesional dari warga desa.</p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
-            <div style="background: white; border-radius: 32px; border: 1px solid #e2e8f0; padding: 40px; display: flex; flex-direction: column; align-items: flex-start; transition: 0.4s ease;" onmouseover="this.style.borderColor='#3b82f6'; this.style.transform='translateY(-10px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
-                <div style="width: 80px; height: 80px; background: #eff6ff; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
-                    <i class="fas fa-box-open" style="font-size: 35px; color: #3b82f6;"></i>
-                </div>
-                <h4 style="font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 12px;">Katalog Produk</h4>
-                <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">Dapatkan produk sembako, kuliner khas Patimban, olahan laut, hingga kerajinan tangan kreatif langsung dari produsen desa.</p>
-                <a href="{{ route('login') }}" style="font-weight: 800; color: #3b82f6; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    Eksplor Produk <i class="fas fa-arrow-right"></i>
+                <a href="{{ route('login') }}" class="kat-link">
+                    Eksplor Produk
+                    <span class="arrow"><i class="fas fa-arrow-right"></i></span>
                 </a>
             </div>
 
-            <div style="background: white; border-radius: 32px; border: 1px solid #e2e8f0; padding: 40px; display: flex; flex-direction: column; align-items: flex-start; transition: 0.4s ease;" onmouseover="this.style.borderColor='#10b981'; this.style.transform='translateY(-10px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
-                <div style="width: 80px; height: 80px; background: #ecfdf5; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
-                    <i class="fas fa-tools" style="font-size: 35px; color: #10b981;"></i>
+            <!-- Jasa -->
+            <div class="kat-card green reveal reveal-delay-2">
+                <div class="kat-icon-wrap">
+                    <i class="fas fa-tools" style="color:#10b981;"></i>
                 </div>
-                <h4 style="font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 12px;">Layanan Jasa</h4>
-                <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">Butuh bantuan ahli? Cari layanan bengkel, jasa cukur, perbaikan rumah, hingga sewa alat penangkapan ikan di sini.</p>
-                <a href="{{ route('login') }}" style="font-weight: 800; color: #10b981; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    Cari Layanan <i class="fas fa-arrow-right"></i>
+                <h3>Layanan Jasa</h3>
+                <p>
+                    Bengkel, jasa cukur, perbaikan rumah, sewa alat tangkap ikan, dan berbagai keahlian warga siap membantu kebutuhan Anda.
+                </p>
+                <a href="{{ route('login') }}" class="kat-link">
+                    Cari Layanan
+                    <span class="arrow"><i class="fas fa-arrow-right"></i></span>
                 </a>
             </div>
         </div>
     </section>
-{{-- 4. SECTION PREVIEW PRODUK --}}
-    <section style="padding: 100px 8%; background-color: #ffffff;">
-        <div class="d-flex justify-content-between align-items-center mb-5">
+
+
+    <!-- ===================================================
+         PREVIEW PRODUK & JASA
+         =================================================== -->
+    <section id="produk" class="section">
+        <div class="produk-header">
             <div>
-                <h2 style="font-size: 32px; font-weight: 800; color: #1e293b;">Pilihan Produk & Jasa Desa</h2>
-                <p style="color: #64748b;">Dukung UMKM Desa dengan membeli produk asli lokal.</p>
+                <div class="label-tag">
+                    <i class="fas fa-store" style="font-size:0.65rem;"></i>
+                    Pilihan Terkini
+                </div>
+                <h2 class="section-heading">Produk &amp; Jasa Desa</h2>
+                <p class="section-sub">Dukung UMKM desa dengan membeli produk asli lokal.</p>
             </div>
         </div>
 
-        <div class="row">
-            {{-- Loop Jasa --}}
+        <div class="produk-grid">
+
+            {{-- === Loop JASA === --}}
             @foreach($jasas as $jasa)
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <img src="{{ $jasa->gambar ? asset('storage/' . $jasa->gambar) : asset('asset/img/default-product.jpg') }}"
-                             class="card-img-top" alt="{{ $jasa->nama_jasa }}" style="height: 200px; object-fit: cover;">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold">{{ $jasa->nama_jasa }}</h5>
-                            <p class="card-text text-primary fw-bold">Rp {{ number_format($jasa->harga, 0, ',', '.') }}</p>
-                            @auth
-                                <a href="/transaksi/jasa/{{ $jasa->id }}" class="btn btn-primary w-100">Beli Sekarang</a>
-                            @else
-                                <a href="{{ route('login') }}" class="btn btn-success w-100">Beli Sekarang</a>
-                            @endauth
-                        </div>
-                    </div>
+            <div class="produk-card reveal">
+                <div class="produk-img-wrap">
+                    <img
+                        src="{{ $jasa->gambar ? asset('storage/'.$jasa->gambar) : asset('asset/img/default-product.jpg') }}"
+                        alt="{{ $jasa->nama_jasa }}"
+                        loading="lazy"
+                    >
+                    <span class="produk-badge">Jasa</span>
                 </div>
+                <div class="produk-body">
+                    <h4>{{ $jasa->nama_jasa }}</h4>
+                    <p class="produk-price">Rp&nbsp;{{ number_format($jasa->harga, 0, ',', '.') }}</p>
+                    @auth
+                        <a href="/transaksi/jasa/{{ $jasa->id }}" class="btn-buy">
+                            <i class="fas fa-shopping-cart"></i> Pesan Sekarang
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="btn-buy alt">
+                            <i class="fas fa-lock"></i> Login untuk Pesan
+                        </a>
+                    @endauth
+                </div>
+            </div>
             @endforeach
 
-            {{-- Loop Produk --}}
+            {{-- === Loop PRODUK === --}}
             @foreach($produks as $produk)
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <img src="{{ $produk->gambar ? asset('storage/' . $produk->gambar) : asset('asset/img/default-product.jpg') }}"
-                             class="card-img-top" alt="{{ $produk->nama_produk }}" style="height: 200px; object-fit: cover;">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold">{{ $produk->nama_produk }}</h5>
-                            <p class="card-text text-primary fw-bold">Rp {{ number_format($produk->harga, 0, ',', '.') }}</p>
-                            @auth
-                                <a href="/transaksi/produk/{{ $produk->id }}" class="btn btn-primary w-100">Beli Sekarang</a>
-                            @else
-                                <a href="{{ route('login') }}" class="btn btn-success w-100">Beli Sekarang</a>
-                            @endauth
-                        </div>
-                    </div>
+            <div class="produk-card reveal">
+                <div class="produk-img-wrap">
+                    <img
+                        src="{{ $produk->gambar ? asset('storage/'.$produk->gambar) : asset('asset/img/default-product.jpg') }}"
+                        alt="{{ $produk->nama_produk }}"
+                        loading="lazy"
+                    >
+                    <span class="produk-badge">Produk</span>
                 </div>
+                <div class="produk-body">
+                    <h4>{{ $produk->nama_produk }}</h4>
+                    <p class="produk-price">Rp&nbsp;{{ number_format($produk->harga, 0, ',', '.') }}</p>
+                    @auth
+                        <a href="/transaksi/produk/{{ $produk->id }}" class="btn-buy">
+                            <i class="fas fa-shopping-cart"></i> Beli Sekarang
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="btn-buy alt">
+                            <i class="fas fa-lock"></i> Login untuk Beli
+                        </a>
+                    @endauth
+                </div>
+            </div>
             @endforeach
+
         </div>
     </section>
 
-    {{-- 5. FOOTER --}}
-    <footer style="padding: 40px 8%; background-color: #1e293b; color: #94a3b8; text-align: center; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.05);">
-        &copy; 2026 BUMDes Putra Samudra Patimban. Seluruh hak cipta dilindungi. <br>
-        <span style="font-size: 12px; opacity: 0.5; margin-top: 10px; display: block;">Dikembangkan oleh Regga Vision</span>
+
+    <!-- ===================================================
+         FOOTER
+         =================================================== -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="brand-name-f">Putra Samudra Patimban</div>
+                <p>Badan Usaha Milik Desa — Menggerakkan ekonomi dan kesejahteraan warga Desa Patimban.</p>
+            </div>
+            <div>
+                <p style="font-size:0.72rem;color:#8899b0;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">Navigasi</p>
+                <div class="footer-links">
+                    <a href="#beranda">Beranda</a>
+                    <a href="#tentang">Tentang</a>
+                    <a href="#kategori">Layanan</a>
+                    <a href="{{ route('login') }}">Login</a>
+                    <a href="{{ route('register') }}">Register</a>
+                </div>
+            </div>
+            <div>
+                <p style="font-size:0.72rem;color:#8899b0;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">Bergabung</p>
+                <div class="footer-links">
+                    <a href="{{ route('register.mitra') }}">Daftar sebagai Mitra</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 BUMDes Putra Samudra Patimban. Seluruh hak dilindungi.</p>
+            <p class="made-by">Dikembangkan oleh Regga Vision</p>
+        </div>
     </footer>
 
-    {{-- SCRIPT JAM & SMOOTH SCROLL --}}
+
+    <!-- ===================================================
+         SCRIPTS
+         =================================================== -->
     <script>
-        function updateClock() {
-            const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('live-clock').innerText = `${h} : ${m} : ${s}`;
-            document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+    /* ---- Live Clock ---- */
+    (function clock() {
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        function tick() {
+            const n = new Date();
+            const h = String(n.getHours()).padStart(2,'0');
+            const m = String(n.getMinutes()).padStart(2,'0');
+            const s = String(n.getSeconds()).padStart(2,'0');
+            document.getElementById('live-clock').textContent = `${h} : ${m} : ${s}`;
+            document.getElementById('live-date').textContent =
+                `${days[n.getDay()]}, ${n.getDate()} ${months[n.getMonth()]} ${n.getFullYear()}`;
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(tick, 1000); tick();
+    })();
 
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
+    /* ---- Hamburger drawer ---- */
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+
+    function openDrawer() {
+        mobileDrawer.classList.add('open');
+        drawerBackdrop.classList.add('open');
+        hamburgerBtn.classList.add('active');
+        hamburgerBtn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+        mobileDrawer.classList.remove('open');
+        drawerBackdrop.classList.remove('open');
+        hamburgerBtn.classList.remove('active');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+    hamburgerBtn.addEventListener('click', () => {
+        mobileDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
+    });
+    drawerBackdrop.addEventListener('click', closeDrawer);
+    document.querySelectorAll('[data-drawer-close]').forEach(el => {
+        el.addEventListener('click', closeDrawer);
+    });
+
+    /* ---- Navbar scroll class ---- */
+    const navbar = document.getElementById('main-navbar');
+    const onScroll = () => navbar.classList.toggle('scrolled', window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    /* ---- Smooth anchor scroll ---- */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            const target = document.querySelector(a.getAttribute('href'));
+            if (!target) return;
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth' });
         });
+    });
 
+    /* ---- Scroll Reveal ---- */
+    (function reveal() {
+        const els = document.querySelectorAll('.reveal');
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+        els.forEach(el => io.observe(el));
+    })();
 
-      const navbar = document.getElementById('main-navbar');
-window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 60);
-});
+    /* ---- Hover tilt effect on cards (subtle) ---- */
+    document.querySelectorAll('.kat-card, .produk-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width  - 0.5) * 6;
+            const y = ((e.clientY - rect.top)  / rect.height - 0.5) * 6;
+            card.style.transform = `translateY(-6px) rotateY(${x}deg) rotateX(${-y}deg)`;
+            card.style.transition = 'transform 0.1s ease';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+            card.style.transition = 'transform 0.45s cubic-bezier(0.23,1,0.32,1)';
+        });
+    });
     </script>
+
 </body>
 </html>

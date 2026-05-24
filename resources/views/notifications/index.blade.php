@@ -28,8 +28,22 @@
 
                 <div class="flex-grow">
                     <p class="text-sm font-bold text-slate-800">{{ $notif->data['title'] ?? 'Informasi' }}</p>
-                    <p class="text-sm text-slate-600">{{ $notif->data['message'] ?? 'Anda memiliki pesan baru.' }}</p>
-                    <p class="text-[10px] text-slate-400 mt-1">{{ $notif->created_at->diffForHumans() }}</p>
+
+                    {{-- Wajib pakai {!! !!} agar <b> menjadi tebal, bukan teks mentah --}}
+                    <div class="text-sm text-slate-600 mt-1 leading-relaxed">
+                        {!! $notif->data['message'] ?? 'Anda memiliki pesan baru.' !!}
+                    </div>
+
+                    {{-- Tombol Lihat Detail (Muncul jika ada action_url di data notifikasi) --}}
+                    @if(isset($notif->data['action_url']))
+                        <div class="mt-3">
+                            <a href="{{ $notif->data['action_url'] }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-600 hover:text-white transition-colors border border-blue-100">
+                                <i class="fas fa-search"></i> Lihat Detail
+                            </a>
+                        </div>
+                    @endif
+
+                    <p class="text-[10px] text-slate-400 mt-3">{{ $notif->created_at->diffForHumans() }}</p>
                 </div>
 
                 <span class="text-[10px] text-rose-400 font-bold opacity-0 group-hover:opacity-100 transition flex-shrink-0 mt-1">
@@ -63,6 +77,9 @@ function updateNavbarBadge(jumlahDikurangi = 1) {
 }
 
 function hapusNotif(id, el) {
+    // Mencegah klik tombol action_url memicu hapusNotif
+    if (event.target.closest('a')) return;
+
     el.style.transition = 'opacity 0.3s, transform 0.3s, max-height 0.3s, padding 0.3s';
     el.style.opacity = '0';
     el.style.transform = 'translateX(20px)';

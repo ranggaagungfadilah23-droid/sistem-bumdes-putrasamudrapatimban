@@ -58,7 +58,6 @@
     .pw { position: relative; }
     .pw .ic { padding-right: 36px; }
     .pw-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #999; cursor: pointer; font-size: 13px; }
-    /* Sembunyikan ikon mata bawaan browser (Chrome, Edge, IE) */
     input[type="password"]::-ms-reveal,
     input[type="password"]::-ms-clear,
     input[type="password"]::-webkit-contacts-auto-fill-button,
@@ -99,17 +98,16 @@
     }
     .btn-submit:hover { background: #9cb066; transform: translateY(-1px); }
 
-    /* Note */
+    /* Note & Syarat */
     .note { color: #fbbc05; font-size: 10px; margin-top: 1px; }
-
-    /* Syarat */
     .syarat-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; justify-content: center; }
     .syarat-row label { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600; text-decoration: underline; cursor: pointer; }
 </style>
 
 <h1 class="reg-title">Pendaftaran Mitra BUMDes</h1>
 
-<a href="{{ url('/auth/google') }}" class="btn-google">
+{{-- ✅ TAMBAHAN: Mengirimkan parameter role=mitra ke URL Google Redirect --}}
+<a href="{{ route('auth.google.redirect', ['role' => 'mitra']) }}" class="btn-google">
     <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt="G">
     Daftar dengan Google
 </a>
@@ -138,7 +136,7 @@
         <div class="fg">
             <label class="lbl">Email Aktif</label>
             <input type="email" name="email" class="ic" placeholder="email@contoh.com"
-                   value="{{ session('google_email') }}"
+                   value="{{ session('google_email') ?? old('email') }}"
                    {{ session('google_email') ? 'readonly' : 'required' }}>
         </div>
 

@@ -1,4 +1,4 @@
-@extends('theme.default')
+@extends('theme.customer')
 @section('content')
 
 <main class="max-w-4xl mx-auto px-6 py-12">
@@ -9,7 +9,7 @@
             <h1 class="text-3xl font-extrabold text-slate-800">Konfirmasi Pesanan</h1>
             <p class="text-slate-500 text-sm mt-1">Periksa pesananmu sebelum membayar</p>
         </div>
-        <a href="{{ route('customer.cart') }}"
+        <a href="{{ route('customer.cart.index') }}"
            class="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition text-sm">
             <i class="fas fa-arrow-left"></i> Kembali ke Keranjang
         </a>
@@ -33,17 +33,25 @@
         </div>
     </div>
 
-    <form action="{{ route('checkout.process') }}" method="POST" id="confirmForm">
+    {{-- Error --}}
+    @if(session('error'))
+    <div class="mb-6 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium px-5 py-3 rounded-xl">
+        <i class="fas fa-exclamation-circle text-red-500 shrink-0"></i>
+        {{ session('error') }}
+    </div>
+    @endif
+
+    <form action="{{ route('customer.checkout.process') }}" method="POST" id="confirmForm">
         @csrf
 
-        {{-- Hidden: kirim cart_ids yang sudah dipilih --}}
+        {{-- ✅ HIDDEN: cart_ids wajib ada agar process() menerima data --}}
         @foreach($selectedCarts as $cart)
             <input type="hidden" name="cart_ids[]" value="{{ $cart->id }}">
         @endforeach
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            {{-- Kiri: Detail Item + Alamat --}}
+            {{-- ── KIRI: Detail Item + Alamat ── --}}
             <div class="lg:col-span-7 space-y-6">
 
                 {{-- Daftar Item --}}
@@ -69,7 +77,9 @@
                                 </div>
                                 <div class="flex-grow min-w-0">
                                     <p class="font-semibold text-slate-800 text-sm truncate">{{ $nama }}</p>
-                                    <p class="text-xs text-slate-400">{{ $cart->produk ? 'Produk' : 'Jasa' }} &bull; Qty {{ $cart->jumlah }}</p>
+                                    <p class="text-xs text-slate-400">
+                                        {{ $cart->produk_id ? 'Produk' : 'Jasa' }} &bull; Qty {{ $cart->jumlah }}
+                                    </p>
                                 </div>
                                 <div class="text-right shrink-0">
                                     <p class="font-bold text-slate-800 text-sm">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
@@ -88,13 +98,19 @@
                         </h3>
                     </div>
                     <div class="p-6">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Alamat Lengkap Tujuan</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                            Alamat Lengkap Tujuan
+                        </label>
                         <textarea
                             name="alamat"
                             rows="3"
-                            class="w-full px-4 py-3 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm resize-none outline-none transition"
                             placeholder="Masukkan alamat lengkap pengiriman..."
-                            required>{{ auth()->user()->pelanggan->alamat_lengkap ?? '' }}</textarea>
+                            required
+                        >{{ old('alamat', auth()->user()->pelanggan->alamat_lengkap ?? auth()->user()->alamat ?? '') }}</textarea>
+                        @error('alamat')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                         <p class="mt-2 text-[11px] text-slate-400 italic">
                             *Alamat otomatis diambil dari data profil Anda. Silakan ubah jika pengiriman ditujukan ke alamat lain.
                         </p>
@@ -102,7 +118,7 @@
                 </div>
             </div>
 
-            {{-- Kanan: Metode Bayar + Total --}}
+            {{-- ── KANAN: Metode Bayar + Ringkasan + Tombol ── --}}
             <div class="lg:col-span-5 space-y-6">
 
                 {{-- Metode Pembayaran --}}
@@ -113,38 +129,38 @@
                         </h3>
                     </div>
                     <div class="p-4 space-y-3">
-                        <div class="space-y-3">
-                            {{-- Bayar Sekarang --}}
-                            <label class="relative flex items-center p-4 border rounded-2xl cursor-pointer hover:bg-blue-50 transition border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
-                                <input type="radio" name="metode_pembayaran" value="bayar_sekarang" class="w-4 h-4 text-blue-600" checked>
-                                <div class="ml-4 flex items-center gap-3">
-                                    <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm">
-                                        <i class="fas fa-wallet"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 text-sm">Bayar Sekarang</p>
-                                        <p class="text-[10px] text-slate-500">Transfer Bank / QRIS</p>
-                                    </div>
+                        {{-- Bayar Sekarang --}}
+                        <label class="relative flex items-center p-4 border-2 rounded-2xl cursor-pointer hover:bg-blue-50 transition border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
+                            <input type="radio" name="metode_pembayaran" value="bayar_sekarang"
+                                   class="w-4 h-4 text-blue-600 accent-blue-600" checked>
+                            <div class="ml-4 flex items-center gap-3">
+                                <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-sm shrink-0">
+                                    <i class="fas fa-wallet"></i>
                                 </div>
-                            </label>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">Bayar Sekarang</p>
+                                    <p class="text-[10px] text-slate-500">Transfer Bank / QRIS</p>
+                                </div>
+                            </div>
+                        </label>
 
-                            {{-- Open PO --}}
-                            <label class="relative flex items-center p-4 border rounded-2xl cursor-pointer hover:bg-amber-50 transition border-slate-100 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/50">
-                                <input type="radio" name="metode_pembayaran" value="po" class="w-4 h-4 text-amber-600">
-                                <div class="ml-4 flex items-center gap-3">
-                                    <div class="w-9 h-9 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-sm">
-                                        <i class="fas fa-file-invoice"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 text-sm">Bayar Nanti (PO)</p>
-                                        <p class="text-[10px] text-slate-500">Purchase Order / Termin</p>
-                                    </div>
+                        {{-- Bayar Nanti PO --}}
+                        <label class="relative flex items-center p-4 border-2 rounded-2xl cursor-pointer hover:bg-amber-50 transition border-slate-100 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/50">
+                            <input type="radio" name="metode_pembayaran" value="po"
+                                   class="w-4 h-4 text-amber-600 accent-amber-600">
+                            <div class="ml-4 flex items-center gap-3">
+                                <div class="w-9 h-9 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-sm shrink-0">
+                                    <i class="fas fa-file-invoice"></i>
                                 </div>
-                            </label>
-                        </div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">Bayar Nanti (PO)</p>
+                                    <p class="text-[10px] text-slate-500">Purchase Order / Termin</p>
+                                </div>
+                            </div>
+                        </label>
 
                         @error('metode_pembayaran')
-                            <p class="text-[10px] text-red-500 px-1 mt-2">{{ $message }}</p>
+                            <p class="text-[10px] text-red-500 px-1 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -167,7 +183,7 @@
                             @endphp
                             <div class="flex justify-between text-xs">
                                 <span class="text-slate-500 truncate max-w-[140px]">{{ $nama }} x{{ $cart->jumlah }}</span>
-                                <span class="text-slate-700 font-medium">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                                <span class="text-slate-700 font-medium shrink-0">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                             </div>
                         @endforeach
                         <div class="border-t border-slate-100 pt-3 flex justify-between items-center">
@@ -177,42 +193,44 @@
                     </div>
                 </div>
 
-                {{-- Tombol Konfirmasi --}}
+                {{-- Tombol Buat Pesanan --}}
                 <button type="button" onclick="submitConfirm(this)"
                         class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-4 rounded-2xl
-                               font-extrabold text-lg transition-all duration-200 shadow-lg shadow-blue-100">
-                    <i class="fas fa-check-circle mr-2"></i>Buat Pesanan
+                               font-extrabold text-base transition-all duration-200 shadow-lg shadow-blue-100
+                               flex items-center justify-center gap-2">
+                    <i class="fas fa-check-circle text-lg"></i> Buat Pesanan
                 </button>
 
-                <p class="text-[10px] text-center text-slate-400">
-                    <i class="fas fa-shield-alt mr-1"></i>Pembayaran aman melalui sistem BUMDes Patimban
+                <p class="text-[10px] text-center text-slate-400 flex items-center justify-center gap-1">
+                    <i class="fas fa-shield-alt"></i> Pembayaran aman melalui sistem BUMDes Patimban
                 </p>
             </div>
-        </div>
+
+        </div>{{-- end grid --}}
     </form>
 </main>
 
 <script>
-    function submitConfirm(btn) {
-        const metode = document.querySelector('input[name="metode_pembayaran"]:checked');
-        const alamat = document.querySelector('textarea[name="alamat"]').value.trim();
+function submitConfirm(btn) {
+    const metode = document.querySelector('input[name="metode_pembayaran"]:checked');
+    const alamat = document.querySelector('textarea[name="alamat"]').value.trim();
 
-        if (!metode) {
-            alert('Silakan pilih metode pembayaran.');
-            return;
-        }
-        if (!alamat) {
-            alert('Alamat pengiriman tidak boleh kosong.');
-            return;
-        }
-
-        // Efek Loading
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Menyimpan...';
-        btn.classList.add('opacity-75', 'cursor-not-allowed');
-        btn.disabled = true;
-
-        document.getElementById('confirmForm').submit();
+    if (!metode) {
+        alert('Silakan pilih metode pembayaran.');
+        return;
     }
+    if (alamat.length < 5) {
+        alert('Alamat pengiriman tidak boleh kosong (minimal 5 karakter).');
+        return;
+    }
+
+    // Loading state
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Menyimpan...';
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    btn.disabled = true;
+
+    document.getElementById('confirmForm').submit();
+}
 </script>
 
 @endsection
