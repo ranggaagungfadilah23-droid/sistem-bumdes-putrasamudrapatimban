@@ -70,7 +70,7 @@ $bh = Bagihasil::where('mitra_id', $request->mitra_id)->latest()->first();
         ->performedOn($bh)
         ->log("Mengkonfirmasi bagi hasil mitra: " . ($mitra->nama_usaha ?? '-') . " — Nominal BUMDes: Rp " . number_format($bh->nominal_bumdes, 0, ',', '.'));
 
-    return redirect()->back()->with('success', 'Bagi hasil berhasil dikonfirmasi!');
+    return redirect()->back()->with('success', 'Bagi hasil mitra BUMDes berhasil dikonfirmasi!');
 }
     public function getOmzet($mitra_id)
 {

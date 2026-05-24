@@ -39,17 +39,19 @@
             </nav>
         </div>
 
-        <div>
-            <p class="px-4 text-[10px] font-bold mb-4 uppercase tracking-[0.15em] text-slate-500">Laporan</p>
-            <nav class="space-y-1.5">
-                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800/50 hover:text-slate-100 rounded-xl transition-all font-semibold">
-                    <i class="fas fa-file-contract w-5 text-center text-sm"></i> Laporan Bulanan
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800/50 hover:text-slate-100 rounded-xl transition-all font-semibold">
-                    <i class="fas fa-receipt w-5 text-center text-sm"></i> Monitoring Keuangan
-                </a>
-            </nav>
-        </div>
+       <div>
+    <p class="px-4 text-[10px] font-bold mb-4 uppercase tracking-[0.15em] text-slate-500">Laporan</p>
+    <nav class="space-y-1.5">
+        <a href="{{ route('kepala-bumdes.laporan-bulanan') }}"
+           class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('kepala-bumdes.laporan-bulanan') ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
+            <i class="fas fa-file-contract w-5 text-center text-sm"></i> Laporan Bulanan
+        </a>
+        <a href="{{ route('kepala-bumdes.monitoring-keuangan') }}"
+           class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('kepala-bumdes.monitoring-keuangan') ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
+            <i class="fas fa-receipt w-5 text-center text-sm"></i> Monitoring Keuangan
+        </a>
+    </nav>
+</div>
 
     </div>
 

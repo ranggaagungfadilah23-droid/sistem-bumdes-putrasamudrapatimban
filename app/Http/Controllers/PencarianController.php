@@ -27,7 +27,7 @@ class PencarianController extends Controller
                 ['title' => 'Kelola Data Mitra', 'url' => route('admin.mitra.index'), 'icon' => 'fa-users'],
                 ['title' => 'Bagi Hasil Keuangan', 'url' => route('admin.bagihasil'), 'icon' => 'fa-hand-holding-usd'],
                 ['title' => 'Laporan Sistem', 'url' => route('admin.laporan'), 'icon' => 'fa-file-invoice-dollar'],
-                ['title' => 'Pengaturan', 'url' => route('admin.settings'), 'icon' => 'fa-cog'],
+
             ];
         } elseif ($role === 'kepala-bumdes') {
             $semuaMenu = [
@@ -44,7 +44,7 @@ class PencarianController extends Controller
 
             // Cek kecocokan persis dengan judul
             if ($judulKecil === $query || str_contains($judulKecil, $query)) {
-                // Jika sangat cocok (misal panjang query > 4 huruf dan cocok dengan judul), langsung pindah halaman!
+             
                 if (strlen($query) > 4) {
                     return redirect($menu['url']);
                 }

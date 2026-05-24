@@ -7,20 +7,20 @@ use Illuminate\Support\Facades\Auth;
 
 class MitraController extends Controller
 {
+    /**
+     * Menampilkan halaman status verifikasi (Menunggu)
+     */
     public function cekStatus()
     {
-        $user = auth()->user();
-
-        // 1. Jika status sudah aktif, baru boleh diredirect ke dashboard
-        if ($user->mitra && trim($user->mitra->status) === 'aktif') {
-            return redirect()->route('mitra.dashboard');
-        }
-
-        // 2. Jika status belum aktif (atau belum ada data mitra),
-        // HANYA tampilkan view-nya saja.
+        // ✅ Apapun statusnya (pending, menunggu_kepala, atau aktif),
+        // tetap tampilkan view menunggu. Biarkan file Blade yang merender
+        // tampilan sesuai status saat ini.
         return view('mitra.menunggu');
     }
 
+    /**
+     * Menangani rute dashboard mitra setelah aktif
+     */
     public function dashboard()
     {
         $mitra = Auth::user()->mitra;

@@ -1,82 +1,83 @@
-<aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#0f172a] text-slate-400 flex flex-col z-[100] border-r border-slate-800/50 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out">
-    <div class="h-20 flex items-center px-8 border-b border-slate-800/50 shrink-0">
-        <div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center text-lg shadow-lg shadow-blue-600/40 mr-3">
-            <i class="fas fa-layer-group"></i>
+{{-- sidebar-admin.blade.php --}}
+<aside class="app-sidebar" id="sidebar">
+
+    {{-- Logo --}}
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon" style="background: #1d4ed8;">
+            <i class="fas fa-shield-alt"></i>
         </div>
-        <span class="font-extrabold text-xl text-white tracking-tight">BUMDes <span class="text-blue-500">Patimban</span></span>
-    </div>
-
-    <div class="flex-1 overflow-y-auto py-6 px-4 space-y-7 custom-scrollbar">
-
-        <div>
-            <p class="px-4 text-[10px] font-bold mb-4 uppercase tracking-[0.15em] text-slate-500">Utama</p>
-            <nav class="space-y-1.5">
-                <a href="{{ route('admin.dashboard') }}"
-                   class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
-                    <i class="fas fa-chart-pie w-5 text-center text-sm"></i> Dashboard
-                </a>
-
-            </nav>
-        </div>
-
-        <div>
-            <p class="px-4 text-[10px] font-bold mb-4 uppercase tracking-[0.15em] text-slate-500">Kemitraan</p>
-            <nav class="space-y-1.5">
-                <a href="{{ route('admin.pengajuan') }}"
-                   class="flex items-center justify-between px-4 py-3 {{ request()->routeIs('admin.pengajuan') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all group font-semibold">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-user-check w-5 text-center text-sm"></i> Pengajuan
-                    </div>
-                    <span class="{{ request()->routeIs('admin.pengajuan') ? 'bg-white text-blue-600' : 'bg-amber-500/10 text-amber-500 group-hover:bg-amber-500 group-hover:text-white' }} text-[10px] px-2 py-0.5 rounded-lg font-bold transition-colors">
-                        {{ \App\Models\User::where('role', 'mitra')->where('status', 'pending')->count() }}
-                    </span>
-                </a>
-
-                <a href="{{ route('admin.mitra.index') }}"
-                   class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.mitra.index') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
-                    <i class="fas fa-users w-5 text-center text-sm"></i> Data Mitra
-                </a>
-            </nav>
-        </div>
-
-        <div>
-            <p class="px-4 text-[10px] font-bold mb-4 uppercase tracking-[0.15em] text-slate-500">Keuangan</p>
-            <nav class="space-y-1.5">
-                <a href="{{ route('admin.bagihasil') }}"
-                   class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.bagihasil') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
-                    <i class="fas fa-hand-holding-usd w-5 text-center text-sm"></i> Bagi Hasil
-                </a>
-                <a href="{{ route('admin.laporan') }}"
-                   class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.laporan') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
-                    <i class="fas fa-file-invoice-dollar w-5 text-center text-sm"></i> Laporan Keuangan
-                </a>
-            </nav>
-        </div>
-
-        <div>
-            <p class="px-4 text-[10px] font-bold mb-4 uppercase tracking-[0.15em] text-slate-500">Lainnya</p>
-            <nav class="space-y-1.5">
-                <a href="{{ route('admin.histori') }}"
-                   class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.histori') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
-                    <i class="fas fa-history w-5 text-center text-sm"></i> Histori Aktivitas
-                </a>
-                {{-- <a href="{{ route('admin.settings') }}"
-                   class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.settings') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800/50 hover:text-slate-100' }} rounded-xl transition-all font-semibold">
-                    <i class="fas fa-cog w-5 text-center text-sm"></i> Pengaturan Sistem
-                </a> --}}
-            </nav>
+        <span class="sidebar-logo-text">BUMDes <span style="color: #60a5fa;">Patimban</span></span>
+        <div class="sidebar-logo-close" onclick="closeSidebar()" aria-label="Tutup menu">
+            <i class="fas fa-times" style="font-size: 14px;"></i>
         </div>
     </div>
 
-    <div class="p-5 border-t border-slate-800/50 bg-slate-900/50 shrink-0">
-        <div class="flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-800 transition-colors cursor-pointer group">
-            <div class="w-10 h-10 bg-slate-800 text-slate-200 rounded-full flex items-center justify-center font-bold border border-slate-700 group-hover:border-blue-500 transition-all">
+    {{-- Navigation --}}
+    <div class="sidebar-body">
+
+        <div class="nav-section">
+            <p class="nav-section-label">Utama</p>
+            <a href="{{ route('admin.dashboard') }}"
+               class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+               style="{{ request()->routeIs('admin.dashboard') ? '--sidebar-active-color: #60a5fa; --sidebar-active-bg: rgba(29,78,216,0.12);' : '' }}">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <p class="nav-section-label">Verifikasi</p>
+            <a href="{{ route('admin.pengajuan') }}"
+               class="nav-link {{ request()->routeIs('admin.pengajuan') ? 'active' : '' }}"
+               style="{{ request()->routeIs('admin.pengajuan') ? '--sidebar-active-color: #60a5fa; --sidebar-active-bg: rgba(29,78,216,0.12);' : '' }}">
+                <i class="fas fa-file-alt"></i> Pengajuan Mitra
+                @php $pendingCount = \App\Models\User::where('role','mitra')->where('status','pending')->count(); @endphp
+                @if($pendingCount > 0)
+                    <span class="nav-badge nav-badge-blue">{{ $pendingCount }}</span>
+                @endif
+            </a>
+            <a href="{{ route('admin.mitra.index') }}"
+               class="nav-link {{ request()->routeIs('admin.mitra.index') ? 'active' : '' }}"
+               style="{{ request()->routeIs('admin.mitra.index') ? '--sidebar-active-color: #60a5fa; --sidebar-active-bg: rgba(29,78,216,0.12);' : '' }}">
+                <i class="fas fa-users"></i> Data Mitra
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <p class="nav-section-label">Keuangan</p>
+            <a href="{{ route('admin.bagihasil') }}"
+               class="nav-link {{ request()->routeIs('admin.bagihasil') ? 'active' : '' }}"
+               style="{{ request()->routeIs('admin.bagihasil') ? '--sidebar-active-color: #60a5fa; --sidebar-active-bg: rgba(29,78,216,0.12);' : '' }}">
+                <i class="fas fa-hand-holding-usd"></i> Bagi Hasil
+            </a>
+            <a href="{{ route('admin.laporan') }}"
+               class="nav-link {{ request()->routeIs('admin.laporan') ? 'active' : '' }}"
+               style="{{ request()->routeIs('admin.laporan') ? '--sidebar-active-color: #60a5fa; --sidebar-active-bg: rgba(29,78,216,0.12);' : '' }}">
+                <i class="fas fa-file-invoice-dollar"></i> Laporan
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <p class="nav-section-label">Sistem</p>
+            <a href="{{ route('admin.histori') }}"
+               class="nav-link {{ request()->routeIs('admin.histori') ? 'active' : '' }}"
+               style="{{ request()->routeIs('admin.histori') ? '--sidebar-active-color: #60a5fa; --sidebar-active-bg: rgba(29,78,216,0.12);' : '' }}">
+                <i class="fas fa-history"></i> Histori Aktivitas
+            </a>
+        </div>
+
+    </div>
+
+    {{-- Footer --}}
+    <div class="sidebar-footer">
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar" style="background: #1e3a5f; border-color: #1d4ed8; color: #60a5fa;">
                 {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
             </div>
-            <div class="overflow-hidden">
-                <p class="text-sm font-bold text-white truncate leading-tight">{{ Auth::user()->name ?? 'Admin' }}</p>
-                <p class="text-[10px] text-slate-500 font-medium tracking-wide">Super Administrator</p>
+            <div style="overflow: hidden; flex: 1;">
+                <div class="sidebar-profile-name">{{ Auth::user()->name ?? 'Admin' }}</div>
+                <div class="sidebar-profile-role">Administrator</div>
             </div>
         </div>
     </div>
+
 </aside>

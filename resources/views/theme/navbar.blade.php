@@ -1,104 +1,257 @@
-{{-- NAVBAR FULL FINAL --}}
-<header class="sticky top-0 z-50 w-full bg-white border-b border-slate-200/60 px-4 md:px-8 h-16 md:h-20 flex items-center shadow-sm">
-    <div class="flex items-center justify-between w-full max-w-7xl mx-auto h-full gap-2">
+{{-- theme/navbar.blade.php --}}
+<header class="app-topbar">
 
-        {{-- 1. BAGIAN KIRI: Sidebar Toggle & Judul --}}
-        {{-- Menggunakan flex-1 agar area kiri bisa melar, dan min-w-0 agar teks truncate berfungsi --}}
-        <div class="flex items-center min-w-0 flex-1 md:flex-initial">
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-emerald-600 focus:outline-none mr-3 shrink-0">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-            <h2 class="text-xs sm:text-sm md:text-lg font-bold text-slate-800 truncate pr-2">
-                Dashboard {{ auth()->check() ? ucwords(str_replace('-', ' ', auth()->user()->role)) : 'Guest' }}
-            </h2>
+    {{-- Hamburger mobile --}}
+    <button class="topbar-hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+        <i class="fas fa-bars" style="font-size: 16px;"></i>
+    </button>
+
+    {{-- Page title --}}
+    <h2 class="topbar-title">
+        Dashboard {{ auth()->check() ? ucwords(str_replace('-', ' ', auth()->user()->role)) : 'Guest' }}
+    </h2>
+
+    <div class="topbar-spacer"></div>
+
+    {{-- Slot search dari page --}}
+    @stack('navbar-search')
+
+    {{-- Cart (customer only) --}}
+    @auth
+        @if(auth()->user()->role == 'customer')
+            <a href="{{ route('customer.pesanan') }}" class="topbar-icon-btn topbar-link" title="Pesanan saya">
+                <i class="fas fa-receipt"></i>
+            </a>
+            <a href="{{ route('customer.cart') }}" class="topbar-icon-btn topbar-link" style="position:relative;" title="Keranjang">
+                <i class="fas fa-shopping-cart"></i>
+                @php $cartCount = \App\Models\Cart::where('user_id', auth()->id())->count(); @endphp
+                @if($cartCount > 0)
+                    <span class="topbar-badge">{{ $cartCount }}</span>
+                @endif
+            </a>
+        @endif
+    @endauth
+
+    {{-- Notifikasi --}}
+    @php
+        $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', auth()->id())
+            ->whereNull('read_at')
+            ->count();
+    @endphp
+    <a href="{{ route('notifications.index') }}" class="topbar-icon-btn topbar-link" style="position:relative;" title="Notifikasi">
+        <i class="fas fa-bell"></i>
+        <span id="notif-badge" class="topbar-badge {{ $unreadCount > 0 ? '' : 'topbar-badge-hidden' }}">
+            {{ $unreadCount }}
+        </span>
+    </a>
+
+    {{-- Profile dropdown --}}
+    <div class="topbar-profile-wrap">
+        <div id="profileTrigger" class="topbar-avatar" title="Menu akun">
+            @if(Auth::check())
+                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+            @else
+                <i class="fas fa-user"></i>
+            @endif
         </div>
 
-        {{-- 2. BAGIAN KANAN: Aksi & Profil --}}
-        {{-- Kita hapus shrink-0 kaku dan atur max-w agar seimbang di mobile --}}
-        <div class="flex items-center gap-2 md:gap-4 max-w-full">
-
-            {{-- Wrapper Search agar di mobile tidak merusak flexbox utama --}}
-            <div class="min-w-0">
-                @stack('navbar-search')
+        <div id="profileMenu" class="topbar-dropdown topbar-dropdown-hidden">
+            <div class="topbar-dropdown-header">
+                <p class="topbar-dropdown-label">Akun Saya</p>
+                <p class="topbar-dropdown-name">{{ Auth::user()->name ?? 'User' }}</p>
+                <p class="topbar-dropdown-role">{{ ucwords(str_replace('-', ' ', Auth::user()->role ?? '')) }}</p>
             </div>
-
-            @auth
-                @if(auth()->user()->role == 'customer')
-                    <a href="{{ route('customer.pesanan') }}" class="hidden md:flex items-center gap-2 text-slate-600 hover:text-blue-600 font-bold text-sm transition px-3">
-                        <i class="fas fa-receipt"></i> <span class="hidden lg:inline">Pesanan</span>
-                    </a>
-
-                    <a href="{{ route('customer.cart') }}" class="relative w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 hover:text-blue-600 transition-colors border border-slate-100 shrink-0">
-                        <i class="fas fa-shopping-cart text-sm md:text-base"></i>
-                        @php $cartCount = \App\Models\Cart::where('user_id', auth()->id())->count(); @endphp
-                        @if($cartCount > 0)
-                            <span class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
-                                {{ $cartCount }}
-                            </span>
-                        @endif
-                    </a>
-                @endif
-            @endauth
-
-            {{-- Tombol Notifikasi --}}
-            @php
-                $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
-                    ->where('notifiable_id', auth()->id())
-                    ->whereNull('read_at')
-                    ->count();
-            @endphp
-
-            <a href="{{ route('notifications.index') }}" class="relative w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 hover:text-blue-600 transition-colors border border-slate-100 shrink-0">
-                <i class="fas fa-bell text-sm md:text-base"></i>
-                <span id="notif-badge"
-                      class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white {{ $unreadCount > 0 ? '' : 'hidden' }}">
-                    {{ $unreadCount }}
-                </span>
+            <a href="{{ route('profile.edit') }}" class="topbar-dropdown-item">
+                <i class="fas fa-user-edit"></i> Edit Profil
             </a>
-
-            {{-- Dropdown Profil --}}
-            <div class="relative flex items-center ml-1 md:ml-2 shrink-0">
-                <div id="profileTrigger" class="w-9 h-9 md:w-10 md:h-10 bg-emerald-800 text-emerald-100 rounded-full flex items-center justify-center font-extrabold cursor-pointer hover:bg-emerald-900 transition shadow-sm border-2 border-emerald-50 overflow-hidden text-xs md:text-sm">
-                    @if(Auth::check()) {{ strtoupper(substr(Auth::user()->name, 0, 1)) }} @else <i class="fas fa-user"></i> @endif
-                </div>
-
-                <div id="profileMenu" class="hidden absolute right-0 top-full mt-3 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl z-[60] py-2">
-                    <div class="px-4 py-3 border-b border-slate-100">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">Akun Saya</p>
-                        <p class="text-sm font-bold text-slate-800 truncate">{{ Auth::user()->name ?? 'User' }}</p>
-                    </div>
-                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all">
-                        <i class="fas fa-user-edit opacity-50 text-xs"></i> Edit Profil
-                    </a>
-                    <hr class="my-1 border-slate-100">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-all text-left">
-                            <i class="fas fa-power-off text-xs"></i> Keluar
-                        </button>
-                    </form>
-                </div>
-            </div>
+            <div class="topbar-dropdown-divider"></div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="topbar-dropdown-item topbar-dropdown-danger">
+                    <i class="fas fa-power-off"></i> Keluar
+                </button>
+            </form>
         </div>
     </div>
+
 </header>
 
+<style>
+.app-topbar {
+    height: 52px;
+    background: #ffffff;
+    border-bottom: 1px solid #d0d7de;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.topbar-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #656d76;
+    transition: background 0.1s, color 0.1s;
+    flex-shrink: 0;
+}
+.topbar-hamburger:hover { background: #f3f4f6; color: #1f2328; }
+@media (min-width: 768px) { .topbar-hamburger { display: none; } }
+
+.topbar-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2328;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+@media (min-width: 768px) { .topbar-title { max-width: 300px; font-size: 14px; } }
+
+.topbar-spacer { flex: 1; }
+
+/* Icon buttons (notif, cart, pesanan) */
+.topbar-icon-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    border: 1px solid #d0d7de;
+    background: #fff;
+    color: #656d76;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+.topbar-icon-btn:hover { background: #f3f4f6; color: #1f2328; }
+
+/* Badge merah */
+.topbar-badge {
+    position: absolute;
+    top: -5px; right: -5px;
+    min-width: 17px; height: 17px;
+    background: #cf222e;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 20px;
+    border: 1.5px solid #fff;
+    line-height: 1;
+    padding: 0 3px;
+}
+.topbar-badge-hidden { display: none; }
+
+/* Profile */
+.topbar-profile-wrap { position: relative; flex-shrink: 0; margin-left: 2px; }
+
+.topbar-avatar {
+    width: 32px; height: 32px;
+    background: #0d4a2f;
+    color: #6ee7b7;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid #d0d7de;
+    transition: border-color 0.15s;
+    user-select: none;
+}
+.topbar-avatar:hover { border-color: #0969da; }
+
+/* Dropdown */
+.topbar-dropdown {
+    position: absolute;
+    right: 0; top: calc(100% + 8px);
+    width: 210px;
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 200;
+    overflow: hidden;
+}
+.topbar-dropdown-hidden { display: none; }
+
+.topbar-dropdown-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f2f4;
+}
+.topbar-dropdown-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b949e;
+    margin-bottom: 3px;
+}
+.topbar-dropdown-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2328;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.topbar-dropdown-role {
+    font-size: 11px;
+    color: #656d76;
+    margin-top: 1px;
+}
+
+.topbar-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: #1f2328;
+    text-decoration: none;
+    transition: background 0.1s;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+.topbar-dropdown-item i { font-size: 12px; color: #8b949e; width: 14px; text-align: center; }
+.topbar-dropdown-item:hover { background: #f6f8fa; }
+
+.topbar-dropdown-danger { color: #cf222e; }
+.topbar-dropdown-danger i { color: #cf222e; }
+.topbar-dropdown-danger:hover { background: #fff0f0; }
+
+.topbar-dropdown-divider { border: none; border-top: 1px solid #f0f2f4; margin: 2px 0; }
+</style>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const trigger = document.getElementById('profileTrigger');
-        const menu = document.getElementById('profileMenu');
+document.addEventListener('DOMContentLoaded', function () {
+    const trigger = document.getElementById('profileTrigger');
+    const menu    = document.getElementById('profileMenu');
+    if (!trigger || !menu) return;
 
-        if (trigger && menu) {
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                menu.classList.toggle('hidden');
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!menu.contains(e.target) && e.target !== trigger) {
-                    menu.classList.add('hidden');
-                }
-            });
+    trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        menu.classList.toggle('topbar-dropdown-hidden');
+    });
+    document.addEventListener('click', function (e) {
+        if (!menu.contains(e.target) && e.target !== trigger) {
+            menu.classList.add('topbar-dropdown-hidden');
         }
     });
+});
 </script>

@@ -1,4 +1,4 @@
-@extends('theme.default')
+@extends('theme.customer')
 @section('content')
 
 <main class="max-w-7xl mx-auto px-6 py-12">
@@ -23,7 +23,7 @@
         </div>
     @endif
 
-    <form action="{{ route('checkout.confirm') }}" method="POST" id="cartForm">
+    <form action="{{ route('customer.checkout.confirm') }}" method="POST" id="cartForm">
         @csrf
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 

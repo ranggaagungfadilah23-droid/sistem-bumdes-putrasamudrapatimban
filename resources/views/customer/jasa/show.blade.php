@@ -99,7 +99,7 @@
                     </div>
 
                     {{-- FORM ORDER --}}
-                    <form action="{{ route('cart.add.jasa', $jasa->id) }}" method="POST">
+                    <form action="{{ route('customer.cart.add.jasa', $jasa->id) }}" method="POST">
                         @csrf
 
                         {{-- Quantity --}}
@@ -135,7 +135,7 @@
                             <button type="submit" name="action" value="buy"
                                     class="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-200">
                                 <i class="fas fa-bolt"></i>
-                                Beli Sekarang
+                                Sewa Sekarang
                             </button>
                         </div>
                     </form>

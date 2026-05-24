@@ -3,6 +3,20 @@
     .reg-title    { font-size: 20px; font-weight: 800; margin-bottom: 4px; text-align: center; color: #fff; }
     .reg-subtitle { font-size: 12px; text-align: center; color: rgba(255,255,255,0.5); margin-bottom: 14px; }
 
+    /* Google Button & Divider */
+    .btn-google {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; background: #fff; color: #333;
+        border: 2px solid #000; border-radius: 8px; padding: 9px;
+        font-size: 13px; font-weight: 700; text-decoration: none;
+        transition: 0.2s; margin-bottom: 12px;
+    }
+    .btn-google:hover { background: #f5f5f5; }
+
+    .div-line { display: flex; align-items: center; margin-bottom: 14px; }
+    .div-line::before, .div-line::after { content:''; flex:1; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .div-line span { padding: 0 10px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 1.5px; }
+
     /* 2-col grid */
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 18px; }
     .span2   { grid-column: span 2; }
@@ -17,6 +31,8 @@
         .fg { gap: 3px; }
         .radio-item { padding: 8px !important; }
         textarea.ic { min-height: 58px !important; }
+        .btn-google { padding: 8px; margin-bottom: 10px; }
+        .div-line { margin-bottom: 10px; }
     }
 
     /* Field */
@@ -89,6 +105,14 @@
 <h1 class="reg-title">Daftar Pelanggan</h1>
 <p class="reg-subtitle">Lengkapi data diri Anda untuk mulai berbelanja di BUMDes Patimban.</p>
 
+{{-- ✅ TAMBAHAN: Tombol Login Google dengan parameter role=customer --}}
+<a href="{{ route('auth.google.redirect', ['role' => 'customer']) }}" class="btn-google">
+    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt="G">
+    Daftar dengan Google
+</a>
+
+<div class="div-line"><span>ATAU DAFTAR MANUAL</span></div>
+
 <form method="POST" action="{{ route('register') }}">
     @csrf
     <input type="hidden" name="role" value="customer">
@@ -99,7 +123,7 @@
         <div class="fg span2">
             <label class="lbl">Nama Lengkap</label>
             <input type="text" name="name" class="ic" placeholder="Nama lengkap Anda"
-                   value="{{ old('name') }}" required autofocus>
+                   value="{{ session('google_name') ?? old('name') }}" required autofocus>
             @error('name') <span class="err">{{ $message }}</span> @enderror
         </div>
 
@@ -107,7 +131,8 @@
         <div class="fg">
             <label class="lbl">Email</label>
             <input type="email" name="email" class="ic" placeholder="email@contoh.com"
-                   value="{{ old('email') }}" required>
+                   value="{{ session('google_email') ?? old('email') }}"
+                   {{ session('google_email') ? 'readonly' : 'required' }}>
             @error('email') <span class="err">{{ $message }}</span> @enderror
         </div>
 

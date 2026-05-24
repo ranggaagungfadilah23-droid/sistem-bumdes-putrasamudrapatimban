@@ -499,7 +499,7 @@
                                 {{ $item->mitra->alamat_usaha ?? '-' }}
                             </div>
                             <div class="kbf-addr-sub">
-                                RT/RW {{ $item->mitra->rt_rw ?? '-' }} &middot; Dusun {{ $item->mitra->dusun ?? '-' }}
+                               Dusun {{ $item->mitra->dusun ?? '-' }}
                             </div>
                         </td>
 

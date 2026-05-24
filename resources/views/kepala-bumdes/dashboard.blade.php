@@ -1,81 +1,359 @@
 @extends('theme.default')
 
 @section('content')
-<div class="p-6 bg-gray-50/50 min-h-screen">
 
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">
+{{-- Tarik Data Otomatis di Level Blade (Agar Controller Tetap Bersih) --}}
+@php
+    // Statistik Kemitraan
+    $totalAktif = \App\Models\User::where('role', 'mitra')->where('status', 'aktif')->count();
+    $totalMenunggu = \App\Models\User::where('role', 'mitra')->where('status', 'menunggu_kepala')->count();
+    $totalDitolak = \App\Models\User::where('role', 'mitra')->where('status', 'ditolak')->count();
+
+    // Statistik Keuangan Global BUMDes
+    $totalPemasukanBumdes = \App\Models\Bagihasil::where('status', 'SELESAI')->sum('nominal_bumdes');
+    $totalPengeluaranBumdes = \App\Models\RekapPengeluaran::sum('total_pengeluaran');
+    $saldoKasKasaran = $totalPemasukanBumdes - $totalPengeluaranBumdes; // (Belum termasuk suntikan saldo awal)
+
+    // Data Pengajuan Terbaru
+    $pengajuanTerbaru = \App\Models\User::where('role', 'mitra')
+                        ->where('status', 'menunggu_kepala')
+                        ->latest()
+                        ->take(5)
+                        ->get();
+
+    // Generate Data Grafik 6 Bulan Terakhir untuk Pendapatan Bagi Hasil
+    $chartBulan = [];
+    $chartPendapatan = [];
+    for($i = 5; $i >= 0; $i--) {
+        $date = \Carbon\Carbon::now()->subMonths($i);
+        $chartBulan[] = $date->translatedFormat('M Y');
+        $chartPendapatan[] = \App\Models\Bagihasil::where('status', 'SELESAI')
+                                ->whereMonth('tanggal', $date->month)
+                                ->whereYear('tanggal', $date->year)
+                                ->sum('nominal_bumdes');
+    }
+@endphp
+
+<div class="min-h-screen bg-slate-50 p-6 md:p-10 space-y-6">
+
+    {{-- HEADER EXECUTIVE --}}
+    <div class="bg-gradient-to-r from-emerald-800 to-emerald-600 rounded-3xl p-8 text-white shadow-lg shadow-emerald-600/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+        {{-- Dekorasi Latar Belakang --}}
+        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-32 -mb-10 w-32 h-32 bg-emerald-300 opacity-20 rounded-full blur-2xl"></div>
+
+        <div class="relative z-10">
+            <p class="text-emerald-100 text-sm font-bold tracking-widest uppercase mb-1">Executive Dashboard</p>
+            <h1 class="text-3xl font-extrabold tracking-tight">
                 Halo, {{ auth()->user()->name }}! 👋
             </h1>
-            <p class="text-gray-500 text-sm mt-1">Pantau performa dan ringkasan pendaftaran Mitra BUMDes Anda hari ini.</p>
+            <p class="text-emerald-50 text-sm mt-2 max-w-xl leading-relaxed">
+                Ini adalah ringkasan performa BUMDes Putra Samudra Patimban hari ini. Pantau pendaftaran mitra baru dan arus pendapatan bagi hasil secara real-time.
+            </p>
         </div>
 
-        <div class="text-sm text-gray-400 font-medium bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-            <i class="fas fa-calendar-alt mr-2"></i> {{ date('d M Y') }}
+        <div class="relative z-10 flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 rounded-2xl shadow-sm">
+            <div class="bg-emerald-500/50 p-2 rounded-xl">
+                <i class="fas fa-calendar-day text-white text-lg"></i>
+            </div>
+            <div>
+                <p class="text-xs text-emerald-100 font-medium">Hari ini</p>
+                <p class="text-sm font-bold">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    {{-- 4 KARTU STATISTIK UTAMA --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
-        <a href="{{ route('kepala-bumdes.mitra.index') }}" class="block bg-blue-50/50 border border-blue-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-blue-100/50 transition-all duration-300">
-            <div class="flex justify-between items-start">
+        {{-- Card 1: Pengajuan Baru --}}
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 mb-1">Total Mitra Aktif</p>
-                    <h3 class="text-3xl font-bold text-gray-800">
-                        {{ \App\Models\User::where('role', 'mitra')->where('status', 'aktif')->count() }}
-                    </h3>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Butuh Persetujuan</p>
+                    <h3 class="text-3xl font-black text-slate-800">{{ $totalMenunggu }}</h3>
                 </div>
-                <div class="bg-blue-500 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-                    <i class="fas fa-store text-lg"></i>
+                <div class="w-12 h-12 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                    <i class="fas fa-user-clock text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-xs text-blue-600 font-semibold">
-                <span>Lihat Detail Mitra</span>
-                <i class="fas fa-arrow-right ml-2"></i>
-            </div>
-        </a>
+            <a href="{{ route('kepala-bumdes.pengajuan') }}" class="mt-5 inline-flex items-center text-xs font-bold text-amber-500 hover:text-amber-600 transition relative z-10">
+                Tinjau Pengajuan <i class="fas fa-arrow-right ml-1.5"></i>
+            </a>
+        </div>
 
-        <a href="{{ route('kepala-bumdes.pengajuan') }}" class="block bg-amber-50/50 border border-amber-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-amber-100/50 transition-all duration-300">
-            <div class="flex justify-between items-start">
+        {{-- Card 2: Mitra Aktif --}}
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 mb-1">Pengajuan Baru</p>
-                    <h3 class="text-3xl font-bold text-gray-800">
-                        {{ \App\Models\User::where('role', 'mitra')->where('status', 'menunggu_kepala')->count() }}
-                    </h3>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Mitra Aktif</p>
+                    <h3 class="text-3xl font-black text-slate-800">{{ $totalAktif }}</h3>
                 </div>
-                <div class="bg-amber-500 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-amber-200">
-                    <i class="fas fa-clock text-lg"></i>
+                <div class="w-12 h-12 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <i class="fas fa-store text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-xs text-amber-600 font-semibold">
-                <span>Butuh Persetujuan Anda</span>
-                <i class="fas fa-arrow-right ml-2"></i>
-            </div>
-        </a>
+            <a href="{{ route('kepala-bumdes.mitra.index') }}" class="mt-5 inline-flex items-center text-xs font-bold text-blue-500 hover:text-blue-600 transition relative z-10">
+                Lihat Direktori Mitra <i class="fas fa-arrow-right ml-1.5"></i>
+            </a>
+        </div>
 
-        <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-6 shadow-sm">
-            <div class="flex justify-between items-start">
+        {{-- Card 3: Total Pemasukan BUMDes --}}
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 mb-1">Estimasi Pendapatan</p>
-                    <h3 class="text-3xl font-bold text-gray-800">Rp 0</h3>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Pemasukan</p>
+                    <h3 class="text-2xl font-black text-slate-800 font-mono mt-1">Rp {{ number_format($totalPemasukanBumdes, 0, ',', '.') }}</h3>
                 </div>
-                <div class="bg-emerald-500 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
-                    <i class="fas fa-wallet text-lg"></i>
+                <div class="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 shrink-0">
+                    <i class="fas fa-hand-holding-usd text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 flex items-center text-xs text-emerald-600 font-semibold">
-                <span class="bg-emerald-100 px-2 py-1 rounded">Update Real-time</span>
+            <p class="mt-5 text-xs font-semibold text-slate-400 relative z-10">
+                Akumulasi bagi hasil (10%)
+            </p>
+        </div>
+
+        {{-- Card 4: Total Pengeluaran BUMDes --}}
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-red-300 transition-all">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="flex justify-between items-start relative z-10">
+                <div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Pengeluaran</p>
+                    <h3 class="text-2xl font-black text-slate-800 font-mono mt-1">Rp {{ number_format($totalPengeluaranBumdes, 0, ',', '.') }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-red-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30 shrink-0">
+                    <i class="fas fa-file-invoice-dollar text-xl"></i>
+                </div>
             </div>
+            <a href="{{ route('kepala-bumdes.monitoring-keuangan') }}" class="mt-5 inline-flex items-center text-xs font-bold text-red-500 hover:text-red-600 transition relative z-10">
+                Buka Monitoring Keuangan <i class="fas fa-arrow-right ml-1.5"></i>
+            </a>
         </div>
 
     </div>
 
-    <div class="bg-white border border-gray-100 rounded-2xl p-8 text-center shadow-sm">
-        <img src="https://illustrations.popsy.co/white/data-analysis.svg" alt="Empty State" class="w-48 mx-auto mb-4">
-        <h4 class="text-lg font-bold text-gray-800">Belum ada aktivitas terbaru</h4>
-        <p class="text-gray-500 text-sm">Semua data pendaftaran mitra akan muncul di sini setelah diproses.</p>
+    {{-- BAGIAN TENGAH: GRAFIK & DIAGRAM --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {{-- Area Chart: Tren Pemasukan --}}
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">Tren Pemasukan Bagi Hasil</h3>
+                    <p class="text-xs text-slate-400 mt-1">Pergerakan omzet bersih BUMDes selama 6 bulan terakhir.</p>
+                </div>
+                <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold">
+                    6 Bulan
+                </div>
+            </div>
+            <div class="relative h-64 w-full">
+                <canvas id="trenPendapatanChart"></canvas>
+            </div>
+        </div>
+
+        {{-- Doughnut Chart: Komposisi Mitra --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
+            <div>
+                <h3 class="text-base font-bold text-slate-800">Status Kemitraan</h3>
+                <p class="text-xs text-slate-400 mt-1">Persentase pengajuan mitra Patimban.</p>
+            </div>
+            <div class="relative flex-1 flex items-center justify-center mt-4">
+                <div class="w-48 h-48">
+                    <canvas id="statusMitraChart"></canvas>
+                </div>
+                {{-- Angka di Tengah Donut --}}
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-2xl font-black text-slate-800">{{ $totalAktif + $totalMenunggu + $totalDitolak }}</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Total Akun</span>
+                </div>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
+                <div class="text-center">
+                    <div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1"></div>
+                    <p class="text-xs font-bold text-slate-700">{{ $totalAktif }}</p>
+                    <p class="text-[10px] text-slate-400">Aktif</p>
+                </div>
+                <div class="text-center border-x border-slate-100">
+                    <div class="w-3 h-3 rounded-full bg-amber-400 mx-auto mb-1"></div>
+                    <p class="text-xs font-bold text-slate-700">{{ $totalMenunggu }}</p>
+                    <p class="text-[10px] text-slate-400">Proses</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-3 h-3 rounded-full bg-red-400 mx-auto mb-1"></div>
+                    <p class="text-xs font-bold text-slate-700">{{ $totalDitolak }}</p>
+                    <p class="text-[10px] text-slate-400">Ditolak</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- BAGIAN BAWAH: TABEL PENGAJUAN TERBARU --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-base font-bold text-slate-800">
+                <i class="fas fa-bell text-amber-500 mr-2"></i> Perlu Tindakan Anda (Pengajuan Baru)
+            </h3>
+            <a href="{{ route('kepala-bumdes.pengajuan') }}" class="text-xs font-bold text-blue-600 hover:text-blue-700 transition bg-blue-50 px-3 py-1.5 rounded-lg">
+                Lihat Semua
+            </a>
+        </div>
+
+        @if(count($pengajuanTerbaru) > 0)
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-white text-slate-400 text-xs uppercase font-bold tracking-wider border-b border-slate-100">
+                    <tr>
+                        <th class="px-6 py-4">Nama Mitra / Pemilik</th>
+                        <th class="px-6 py-4">Email</th>
+                        <th class="px-6 py-4">Waktu Daftar</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($pengajuanTerbaru as $mitra)
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <p class="font-bold text-slate-800">{{ $mitra->name }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500">{{ $mitra->email }}</td>
+                        <td class="px-6 py-4 text-slate-500">
+                            {{ $mitra->created_at->diffForHumans() }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 uppercase">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Menunggu Anda
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ route('kepala-bumdes.pengajuan') }}" class="inline-flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
+                                Tinjau
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <div class="px-6 py-16 text-center">
+            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check-double text-3xl text-emerald-400"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-700 mb-1">Semua Beres!</h4>
+            <p class="text-sm text-slate-400">Saat ini tidak ada pengajuan mitra baru yang menunggu persetujuan Anda.</p>
+        </div>
+        @endif
     </div>
 
 </div>
+
+{{-- SCRIPT CHART.JS --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. CHART TREN PENDAPATAN (AREA/LINE CHART)
+    const ctxTren = document.getElementById('trenPendapatanChart').getContext('2d');
+
+    // Bikin gradient untuk line chart
+    let gradientArea = ctxTren.createLinearGradient(0, 0, 0, 300);
+    gradientArea.addColorStop(0, 'rgba(16, 185, 129, 0.3)'); // emerald-500 transparent
+    gradientArea.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+    new Chart(ctxTren, {
+        type: 'line',
+        data: {
+            labels: {!! json_encode($chartBulan) !!},
+            datasets: [{
+                label: 'Pendapatan (Rp)',
+                data: {!! json_encode($chartPendapatan) !!},
+                borderColor: '#10b981', // emerald-500
+                backgroundColor: gradientArea,
+                borderWidth: 3,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#10b981',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4 // Smooth curve
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b', // slate-800
+                    padding: 12,
+                    titleFont: { size: 13 },
+                    bodyFont: { size: 14, weight: 'bold' },
+                    callbacks: {
+                        label: function(context) {
+                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(context.raw);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9', drawBorder: false }, // slate-100
+                    ticks: {
+                        color: '#94a3b8', // slate-400
+                        font: { size: 11 },
+                        callback: function(value) {
+                            if(value >= 1000000) return 'Rp ' + (value/1000000) + ' Jt';
+                            return 'Rp ' + value;
+                        }
+                    }
+                },
+                x: {
+                    grid: { display: false, drawBorder: false },
+                    ticks: { color: '#94a3b8', font: { size: 11 } }
+                }
+            }
+        }
+    });
+
+    // 2. CHART STATUS MITRA (DOUGHNUT CHART)
+    const ctxStatus = document.getElementById('statusMitraChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Aktif', 'Proses', 'Ditolak'],
+            datasets: [{
+                data: [{{ $totalAktif }}, {{ $totalMenunggu }}, {{ $totalDitolak }}],
+                backgroundColor: [
+                    '#3b82f6', // blue-500
+                    '#fbbf24', // amber-400
+                    '#f87171'  // red-400
+                ],
+                borderWidth: 0,
+                hoverOffset: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%', // Bikin lubang tengah agak besar untuk teks
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 10,
+                    bodyFont: { size: 13, weight: 'bold' },
+                    displayColors: true,
+                    boxPadding: 4
+                }
+            }
+        }
+    });
+});
+</script>
 @endsection

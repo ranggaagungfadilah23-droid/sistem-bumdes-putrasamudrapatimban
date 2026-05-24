@@ -1,9 +1,10 @@
 <?php
+// File: app/Http/Controllers/CheckoutController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
-use App\Models\Produk; // ✅ Tambahkan model Produk
+use App\Models\Produk;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,20 +22,37 @@ class CheckoutController extends Controller
         Config::$is3ds        = true;
     }
 
+    // =========================================================
+    // CONFIRM
+    // =========================================================
     public function confirm(Request $request)
     {
-        if ($request->isMethod('get') || !$request->has('cart_ids')) {
-            return redirect()->route('customer.cart')->with('error', 'Item tidak dipilih.');
+        $cartIds = $request->input('cart_ids');
+
+        if (empty($cartIds)) {
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Item tidak dipilih.');
         }
 
         $selectedCarts = Cart::with(['produk', 'jasa'])
-            ->whereIn('id', $request->cart_ids)
+            ->whereIn('id', $cartIds)
             ->where('user_id', auth()->id())
             ->get();
+
+        if ($selectedCarts->isEmpty()) {
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Item tidak ditemukan di keranjang.');
+        }
 
         return view('customer.checkout-confirm', compact('selectedCarts'));
     }
 
+    // =========================================================
+    // PROCESS
+    // FIX: cart bayar_sekarang TIDAK dihapus di sini.
+    //      Cart dihapus hanya setelah Midtrans callback settlement.
+    //      Ini mencegah cart kosong jika user back dari halaman payment.
+    // =========================================================
     public function process(Request $request)
     {
         $request->validate([
@@ -49,6 +67,27 @@ class CheckoutController extends Controller
             ->where('user_id', auth()->id())
             ->get();
 
+        if ($carts->isEmpty()) {
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Item keranjang tidak ditemukan atau sudah diproses.');
+        }
+
+        // Bersihkan transaksi pending lama (bayar_sekarang yang belum dibayar/expired)
+        // agar tidak ada data sampah yang menghalangi checkout baru
+        foreach ($carts as $cart) {
+            Transaksi::where('customer_id', auth()->id())
+                ->where('status_pembayaran', 'pending')
+                ->where('metode_pembayaran', 'bayar_sekarang')
+                ->where(function ($q) use ($cart) {
+                    if ($cart->produk_id) {
+                        $q->where('produk_id', $cart->produk_id);
+                    } elseif ($cart->jasa_id) {
+                        $q->where('jasa_id', $cart->jasa_id);
+                    }
+                })
+                ->delete();
+        }
+
         $invoiceNumber = 'INV-' . strtoupper(Str::random(8)) . '-' . now()->format('dmY');
 
         DB::beginTransaction();
@@ -57,14 +96,17 @@ class CheckoutController extends Controller
             $totalAmount = 0;
 
             foreach ($carts as $cart) {
-                // ✅ CEK STOK PRODUK SEBELUM PROSES
-                if ($cart->produk_id) {
-                    $produk = Produk::find($cart->produk_id);
-                    if (!$produk || $produk->jumlah < $cart->jumlah) {
-                        throw new \Exception("Stok produk " . ($produk->nama_produk ?? 'tidak diketahui') . " tidak mencukupi.");
-                    }
 
-                    // ✅ JIKA METODE PO, LANGSUNG POTONG STOK SAAT INVOICE DIBUAT
+                // Cek stok produk
+                if ($cart->produk_id) {
+                    $produk = Produk::lockForUpdate()->find($cart->produk_id);
+                    if (!$produk || $produk->jumlah < $cart->jumlah) {
+                        throw new \Exception(
+                            "Stok produk \"" . ($produk->nama_produk ?? 'tidak diketahui') . "\" tidak mencukupi."
+                        );
+                    }
+                    // PO → potong stok sekarang
+                    // Bayar Sekarang → stok dipotong di callback setelah settlement
                     if ($request->metode_pembayaran === 'po') {
                         $produk->decrement('jumlah', $cart->jumlah);
                     }
@@ -72,7 +114,7 @@ class CheckoutController extends Controller
 
                 $harga   = $cart->produk->harga ?? $cart->jasa->harga ?? 0;
                 $total   = $harga * $cart->jumlah;
-                $mitraId = $cart->produk->user_id ?? $cart->jasa->user_id;
+                $mitraId = $cart->produk->user_id ?? $cart->jasa->user_id ?? null;
 
                 Transaksi::create([
                     'invoice_number'    => $invoiceNumber,
@@ -93,13 +135,20 @@ class CheckoutController extends Controller
                     'id'       => $cart->produk_id ?? 'jasa-' . $cart->jasa_id,
                     'price'    => (int) $harga,
                     'quantity' => (int) $cart->jumlah,
-                    'name'     => substr($cart->produk->nama_produk ?? $cart->jasa->nama_jasa, 0, 50),
+                    'name'     => substr($cart->produk->nama_produk ?? $cart->jasa->nama_jasa ?? '-', 0, 50),
                 ];
 
                 $totalAmount += $total;
-                $cart->delete();
+
+                // PO: hapus cart langsung setelah transaksi dibuat
+                if ($request->metode_pembayaran === 'po') {
+                    $cart->delete();
+                }
+                // Bayar Sekarang: cart TIDAK dihapus di sini.
+                // Cart akan dihapus di callback() setelah Midtrans konfirmasi settlement.
             }
 
+            // ── BAYAR SEKARANG ──
             if ($request->metode_pembayaran === 'bayar_sekarang') {
                 $params = [
                     'transaction_details' => [
@@ -117,25 +166,43 @@ class CheckoutController extends Controller
                 ];
 
                 $snapToken = Snap::getSnapToken($params);
-                Transaksi::where('invoice_number', $invoiceNumber)->update(['snap_token' => $snapToken]);
+
+                Transaksi::where('invoice_number', $invoiceNumber)
+                    ->update(['snap_token' => $snapToken]);
+
+                // ✅ Snap token sukses — TIDAK hapus cart di sini
+                // Cart dihapus di callback() setelah settlement dikonfirmasi Midtrans
 
                 DB::commit();
-                return redirect()->route('checkout_payment', $invoiceNumber);
+                return redirect()->route('customer.checkout.payment', $invoiceNumber);
             }
 
+            // ── PO → langsung invoice ──
             DB::commit();
             return redirect()->route('customer.invoice', $invoiceNumber);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', $e->getMessage());
+
+            Transaksi::where('invoice_number', $invoiceNumber)->delete();
+
+            \Log::error("Checkout error [{$invoiceNumber}]: " . $e->getMessage());
+
+            return back()->withInput()->with('error',
+                'Gagal membuat pesanan: ' . $e->getMessage()
+            );
         }
     }
 
+    // =========================================================
+    // PAYMENT PAGE
+    // =========================================================
     public function payment($invoice)
     {
         $transaksis = Transaksi::where('invoice_number', $invoice)->get();
-        if ($transaksis->isEmpty()) return redirect()->route('index');
+        if ($transaksis->isEmpty()) {
+            return redirect()->route('index');
+        }
 
         $snapToken   = $transaksis->first()->snap_token;
         $totalAmount = $transaksis->sum('total');
@@ -143,6 +210,10 @@ class CheckoutController extends Controller
         return view('customer.checkout_payment', compact('transaksis', 'snapToken', 'totalAmount', 'invoice'));
     }
 
+    // =========================================================
+    // MIDTRANS WEBHOOK CALLBACK
+    // FIX: Cart bayar_sekarang dihapus di sini setelah settlement dikonfirmasi
+    // =========================================================
     public function callback(Request $request)
     {
         $serverKey   = config('services.midtrans.server_key') ?? env('MIDTRANS_SERVER_KEY');
@@ -153,7 +224,7 @@ class CheckoutController extends Controller
         $signature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
 
         if ($signature !== $request->signature_key) {
-            \Log::warning("Midtrans: Signature tidak valid untuk order $orderId");
+            \Log::warning("Midtrans: Signature tidak valid untuk order {$orderId}");
             return response()->json(['status' => 'invalid signature'], 403);
         }
 
@@ -162,13 +233,12 @@ class CheckoutController extends Controller
 
         if ($isSettled) {
             DB::transaction(function () use ($orderId) {
-                // ✅ AMBIL DATA TRANSAKSI DULU UNTUK MEMOTONG STOK
                 $transaksis = Transaksi::where('invoice_number', $orderId)
-                    ->where('status_pembayaran', '!=', 'Lunas') // idempotent
+                    ->where('status_pembayaran', '!=', 'Lunas')
                     ->get();
 
                 foreach ($transaksis as $transaksi) {
-                    // ✅ JIKA BAYAR SEKARANG DAN ITEM ADALAH PRODUK, POTONG STOK SAAT LUNAS
+                    // Potong stok untuk bayar_sekarang (PO sudah dipotong saat process)
                     if ($transaksi->metode_pembayaran !== 'po' && $transaksi->produk_id) {
                         $produk = Produk::find($transaksi->produk_id);
                         if ($produk && $produk->jumlah >= $transaksi->jumlah) {
@@ -176,63 +246,104 @@ class CheckoutController extends Controller
                         }
                     }
 
-                    // UPDATE STATUS TRANSAKSI
                     $transaksi->update([
                         'status_pembayaran' => 'Lunas',
                         'status_pengiriman' => 'Diproses',
                         'tanggal_bayar'     => now(),
                     ]);
+
+                    // ✅ Hapus cart bayar_sekarang setelah settlement dikonfirmasi
+                    // Cart PO sudah dihapus di process(), jadi ini hanya untuk bayar_sekarang
+                    if ($transaksi->metode_pembayaran === 'bayar_sekarang') {
+                        Cart::where('user_id', $transaksi->customer_id)
+                            ->where(function ($q) use ($transaksi) {
+                                if ($transaksi->produk_id) {
+                                    $q->where('produk_id', $transaksi->produk_id);
+                                } elseif ($transaksi->jasa_id) {
+                                    $q->where('jasa_id', $transaksi->jasa_id);
+                                }
+                            })
+                            ->delete();
+                    }
                 }
             });
 
-            \Log::info("Midtrans webhook OK: Invoice $orderId → Lunas, status_pengiriman = Diproses");
+            \Log::info("Midtrans OK: Invoice {$orderId} → Lunas");
 
         } elseif (in_array($request->transaction_status, ['cancel', 'deny', 'expire'])) {
+            // Pembayaran gagal/dibatalkan/expired → update status transaksi saja
+            // Cart TIDAK dihapus agar customer bisa coba bayar lagi
             Transaksi::where('invoice_number', $orderId)
                 ->where('status_pembayaran', '!=', 'Lunas')
                 ->update(['status_pembayaran' => 'Gagal']);
 
-            \Log::info("Midtrans webhook: Invoice $orderId → Gagal/Expired");
+            \Log::info("Midtrans: Invoice {$orderId} → Gagal");
         }
 
         return response()->json(['status' => 'success']);
     }
 
+    // =========================================================
+    // BUY NOW
+    // =========================================================
     public function buyNowRedirect()
     {
         $cartId = session('buy_now_cart_id');
-        if (!$cartId) return redirect()->route('customer.cart')->with('error', 'Sesi habis.');
+
+        if (!$cartId) {
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Sesi Buy Now habis, silakan coba lagi.');
+        }
 
         $cart = Cart::where('id', $cartId)->where('user_id', auth()->id())->first();
-        if (!$cart) return redirect()->route('customer.cart')->with('error', 'Item tidak ditemukan.');
 
+        if (!$cart) {
+            session()->forget('buy_now_cart_id');
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Item tidak ditemukan.');
+        }
+
+        session(['buynow_cart_ids' => [$cart->id]]);
         session()->forget('buy_now_cart_id');
-        session(['buynow_cart_ids' => [$cartId]]);
 
-        return redirect()->route('checkout.buynow.confirm');
+        return redirect()->route('customer.checkout.buynow.confirm');
     }
 
     public function buyNowConfirm()
     {
         $cartIds = session('buynow_cart_ids');
-        if (!$cartIds) return redirect()->route('customer.cart')->with('error', 'Sesi habis.');
+
+        if (empty($cartIds)) {
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Sesi Buy Now habis, silakan coba lagi.');
+        }
 
         $selectedCarts = Cart::with(['produk', 'jasa'])
             ->whereIn('id', $cartIds)
             ->where('user_id', auth()->id())
             ->get();
 
-        if ($selectedCarts->isEmpty()) return redirect()->route('customer.cart')->with('error', 'Item kosong.');
+        if ($selectedCarts->isEmpty()) {
+            session()->forget('buynow_cart_ids');
+            return redirect()->route('customer.cart.index')
+                ->with('error', 'Item tidak ditemukan. Mungkin sudah diproses sebelumnya.');
+        }
 
         return view('customer.checkout-confirm', compact('selectedCarts'));
     }
 
+    // =========================================================
+    // INVOICE
+    // =========================================================
     public function invoice($invoice)
     {
         $transaksis = Transaksi::where('invoice_number', $invoice)->get();
+
         if ($transaksis->isEmpty()) {
-            return redirect()->route('customer.dashboard')->with('error', 'Invoice tidak ditemukan.');
+            return redirect()->route('customer.dashboard')
+                ->with('error', 'Invoice tidak ditemukan.');
         }
+
         return view('customer.invoice', compact('transaksis', 'invoice'));
     }
 }
