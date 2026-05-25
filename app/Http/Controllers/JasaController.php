@@ -20,7 +20,8 @@ class JasaController extends Controller
     // 2. Untuk Halaman Publik (Landing Page)
     public function landingPage()
     {
-        // PERBAIKAN TYPO: DARI Jas:: MENJADI Jasa::
+
+
         $jasas = Jasa::latest()->take(3)->get();
         $produks = Produk::latest()->take(3)->get();
 
