@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Mitra;
-use App\Models\Bagihasil;
+use App\Models\BagiHasil;
 use App\Models\LaporanKas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -130,12 +130,12 @@ class AdminController extends Controller
         $bulanIni = now()->month;
         $tahunIni = now()->year;
 
-        $totalKasMasuk = Bagihasil::whereMonth('tanggal', $bulanIni)
+        $totalKasMasuk = BagiHasil::whereMonth('tanggal', $bulanIni)
             ->whereYear('tanggal', $tahunIni)
             ->where('status', 'SELESAI')
             ->sum('nominal_bumdes');
 
-        $totalBagiHasil = Bagihasil::whereMonth('tanggal', $bulanIni)
+        $totalBagiHasil = BagiHasil::whereMonth('tanggal', $bulanIni)
             ->whereYear('tanggal', $tahunIni)
             ->where('status', 'SELESAI')
                         ->sum('total_omzet');
@@ -145,7 +145,7 @@ class AdminController extends Controller
 
         $bulanAktif = now()->translatedFormat('F Y');
 
-        $grafikBulanan = Bagihasil::selectRaw('MONTH(tanggal) as bulan, SUM(total_omzet) as omzet, SUM(nominal_bumdes) as kas_bumdes')
+        $grafikBulanan = BagiHasil::selectRaw('MONTH(tanggal) as bulan, SUM(total_omzet) as omzet, SUM(nominal_bumdes) as kas_bumdes')
             ->whereYear('tanggal', $tahunIni)
             ->where('status', 'SELESAI')
             ->groupBy('bulan')
@@ -157,7 +157,7 @@ class AdminController extends Controller
         $dataOmzet     = $grafikBulanan->pluck('omzet');
         $dataKasBumdes = $grafikBulanan->pluck('kas_bumdes');
 
-        $perMitra = Bagihasil::where('status', 'SELESAI')
+        $perMitra = BagiHasil::where('status', 'SELESAI')
             ->get()
             ->groupBy('mitra_id')
             ->map(fn($group) => [
@@ -245,12 +245,12 @@ class AdminController extends Controller
     $bulanIni = now()->month;
     $tahunIni = now()->year;
 
-    $totalKasMasuk = Bagihasil::whereMonth('tanggal', $bulanIni)
+    $totalKasMasuk = BagiHasil::whereMonth('tanggal', $bulanIni)
         ->whereYear('tanggal', $tahunIni)
         ->where('status', 'SELESAI')
         ->sum('nominal_bumdes');
 
-    $totalBagiHasil = Bagihasil::whereMonth('tanggal', $bulanIni)
+    $totalBagiHasil = BagiHasil::whereMonth('tanggal', $bulanIni)
         ->whereYear('tanggal', $tahunIni)
         ->where('status', 'SELESAI')
         ->sum('total_omzet');
@@ -258,7 +258,7 @@ class AdminController extends Controller
     $totalMitra = Mitra::whereHas('user', fn($q) => $q->where('status', 'aktif'))->count();
     $bulanAktif = now()->translatedFormat('F Y');
 
-    $perMitra = Bagihasil::whereMonth('tanggal', $bulanIni)
+    $perMitra = BagiHasil::whereMonth('tanggal', $bulanIni)
         ->whereYear('tanggal', $tahunIni)
         ->where('status', 'SELESAI')
         ->get()
