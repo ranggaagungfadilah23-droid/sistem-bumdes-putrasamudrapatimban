@@ -16,10 +16,10 @@
     @php
         $mitraAktif   = \App\Models\Mitra::whereHas('user', fn($q)=>$q->where('status','aktif'))->count();
         $pengajuan    = \App\Models\User::where('role','mitra')->where('status','pending')->count();
-        $omzetBulan   = \App\Models\Bagihasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->sum('total_omzet');
-        $kasBulan     = \App\Models\Bagihasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->where('status','SELESAI')->sum('nominal_bumdes');
-        $bhSelesai    = \App\Models\Bagihasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->where('status','SELESAI')->count();
-        $bhPending    = \App\Models\Bagihasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->where('status','PENDING')->count();
+        $omzetBulan   = \App\Models\BagiHasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->sum('total_omzet');
+        $kasBulan     = \App\Models\BagiHasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->where('status','SELESAI')->sum('nominal_bumdes');
+        $bhSelesai    = \App\Models\BagiHasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->where('status','SELESAI')->count();
+        $bhPending    = \App\Models\BagiHasil::whereMonth('tanggal',now()->month)->whereYear('tanggal',now()->year)->where('status','PENDING')->count();
     @endphp
 
     {{-- STAT CARDS --}}
