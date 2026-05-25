@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Bagihasil;
+use App\Models\BagiHasil;
 use App\Models\Mitra;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,7 +11,7 @@ class BagihasilController extends Controller
 {
     public function index()
     {
-        $bagihasils = Bagihasil::latest()->get();
+        $bagihasils = BagiHasil::latest()->get();
         $all_mitra  = Mitra::with('user')->get();
 
         return view('admin.bagihasil', compact('bagihasils', 'all_mitra'));
@@ -30,7 +30,7 @@ class BagihasilController extends Controller
     $persenMitra  = 100 - $persenBumdes;
 
     // ✅ Cari dulu, kalau ada update, kalau tidak ada buat baru
-$bh = Bagihasil::where('mitra_id', $request->mitra_id)->latest()->first();
+$bh = BagiHasil::where('mitra_id', $request->mitra_id)->latest()->first();
 
     if ($bh) {
         $bh->update([
@@ -43,7 +43,7 @@ $bh = Bagihasil::where('mitra_id', $request->mitra_id)->latest()->first();
             'tanggal'        => now(),
         ]);
     } else {
-        Bagihasil::create([
+        BagiHasil::create([
             'mitra_id'       => $request->mitra_id,
             'total_omzet'    => $omzet,
             'persen_bumdes'  => $persenBumdes,
@@ -59,7 +59,7 @@ $bh = Bagihasil::where('mitra_id', $request->mitra_id)->latest()->first();
 }
     public function confirm(Request $request)
 {
-    $bh = Bagihasil::findOrFail($request->id);
+    $bh = BagiHasil::findOrFail($request->id);
     $mitra = \App\Models\Mitra::where('user_id', $bh->mitra_id)->first();
 
     $bh->update(['status' => 'SELESAI']);
