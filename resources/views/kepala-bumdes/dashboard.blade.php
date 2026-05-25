@@ -10,7 +10,7 @@
     $totalDitolak = \App\Models\User::where('role', 'mitra')->where('status', 'ditolak')->count();
 
     // Statistik Keuangan Global BUMDes
-    $totalPemasukanBumdes = \App\Models\Bagihasil::where('status', 'SELESAI')->sum('nominal_bumdes');
+    $totalPemasukanBumdes = \App\Models\BagiHasil::where('status', 'SELESAI')->sum('nominal_bumdes');
     $totalPengeluaranBumdes = \App\Models\RekapPengeluaran::sum('total_pengeluaran');
     $saldoKasKasaran = $totalPemasukanBumdes - $totalPengeluaranBumdes; // (Belum termasuk suntikan saldo awal)
 
@@ -27,7 +27,7 @@
     for($i = 5; $i >= 0; $i--) {
         $date = \Carbon\Carbon::now()->subMonths($i);
         $chartBulan[] = $date->translatedFormat('M Y');
-        $chartPendapatan[] = \App\Models\Bagihasil::where('status', 'SELESAI')
+        $chartPendapatan[] = \App\Models\BagiHasil::where('status', 'SELESAI')
                                 ->whereMonth('tanggal', $date->month)
                                 ->whereYear('tanggal', $date->year)
                                 ->sum('nominal_bumdes');
