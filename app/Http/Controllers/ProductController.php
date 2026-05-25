@@ -34,45 +34,41 @@ class ProductController extends Controller
     // SIMPAN PRODUK BARU
     // =============================================
     public function store(Request $request)
-    {
-        // 1. Validasi input
-        $request->validate([
-            'nama_produk' => 'required|string|max:255',
-            'harga'       => 'required|numeric|min:0',
-            'jumlah'      => 'required|integer|min:0',
-            'deskripsi'   => 'required|string',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ], [
-            'nama_produk.required' => 'Nama produk wajib diisi.',
-            'harga.required'       => 'Harga wajib diisi.',
-            'harga.numeric'        => 'Harga harus berupa angka.',
-            'jumlah.required'      => 'Jumlah stok wajib diisi.',
-            'jumlah.integer'       => 'Jumlah stok harus berupa angka bulat.',
-            'deskripsi.required'   => 'Deskripsi wajib diisi.',
-            'gambar.image'         => 'File harus berupa gambar.',
-            'gambar.max'           => 'Ukuran gambar maksimal 2MB.',
-        ]);
+{
+    // 1. Validasi
+    $request->validate([
+        'nama_produk' => 'required|string|max:255',
+        'harga'       => 'required|numeric|min:0',
+        'jumlah'      => 'required|integer|min:0',
+        'deskripsi'   => 'required|string',
+        'gambar'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
 
-        // 2. Upload gambar jika ada
-        $path = null;
-        if ($request->hasFile('gambar')) {
-            $path = $request->file('gambar')->store('produk', 's3');
+    // 2. Upload gambar
+    $path = null;
+    if ($request->hasFile('gambar')) {
+        $path = $request->file('gambar')->store('produk', 's3');
+
+        // Cek jika upload gagal
+        if (!$path) {
+            return redirect()->back()->withErrors(['gambar' => 'Gagal upload ke Supabase.']);
         }
-
-        // 3. Simpan ke database
-        Produk::create([
-            'user_id'     => Auth::id(),
-            'nama_produk' => $request->nama_produk,
-            'harga'       => $request->harga,
-            'jumlah'      => $request->jumlah,
-            'deskripsi'   => $request->deskripsi,
-            'gambar'      => $path,
-            'status'      => 'tersedia',
-        ]);
-
-        // 4. Redirect dengan pesan sukses
-        return redirect()->route('mitra.kelola')->with('success', 'Produk berhasil ditambahkan!');
     }
+
+    // 3. Simpan ke database (HANYA SEKALI!)
+    Produk::create([
+        'user_id'     => Auth::id(),
+        'nama_produk' => $request->nama_produk,
+        'harga'       => $request->harga,
+        'jumlah'      => $request->jumlah,
+        'deskripsi'   => $request->deskripsi,
+        'gambar'      => $path,
+        'status'      => 'tersedia',
+    ]);
+
+    // 4. Redirect
+    return redirect()->route('mitra.kelola')->with('success', 'Produk berhasil ditambahkan!');
+}
 
     // =============================================
     // TAMPIL DETAIL PRODUK (CUSTOMER)

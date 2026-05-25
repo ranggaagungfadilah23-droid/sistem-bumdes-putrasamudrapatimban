@@ -31,13 +31,16 @@
                  @forelse (Auth::user()->produks as $item)
                     <tr class="hover:bg-slate-50/50 transition">
                         <td class="p-5">
-                            <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border">
-                                @if($item->gambar)
-                                    <img src="{{ asset('storage/' . $item->gambar) }}" class="w-full h-full object-cover">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center text-slate-300"><i class="fas fa-image"></i></div>
-                                @endif
-                            </div>
+                                        <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border">
+                    @if($item->gambar)
+                        {{-- Gunakan Storage::disk('s3') untuk mengambil URL dari Supabase --}}
+                        <img src="{{ Storage::disk('s3')->url($item->gambar) }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full flex items-center justify-center text-slate-300">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    @endif
+                </div>
                         </td>
                         <td class="p-5 font-bold text-slate-700">{{ $item->nama_produk }}</td>
                         <td class="p-5 font-semibold text-slate-600">Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
