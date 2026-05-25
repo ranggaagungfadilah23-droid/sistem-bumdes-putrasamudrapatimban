@@ -2,30 +2,19 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * Storage Service untuk Supabase Storage menggunakan REST API
+ * Storage Service untuk file upload
+ * Menggunakan Laravel Storage (bisa local atau S3)
  */
 class StorageService
 {
-    protected $url;
-    protected $bucket;
-    protected $apiKey;
-
-    public function __construct()
-    {
-        $this->url = config('supabase.url', 'https://twbvqgjedeapqszljzox.supabase.co');
-        $this->bucket = config('supabase.storage.bucket', 'produk');
-        $this->apiKey = config('supabase.service_key');
-    }
-
     /**
      * Upload file dengan auto-generated filename
      * 
      * @param \Illuminate\Http\UploadedFile $file
-     * @param string $directory Directory dalam bucket (e.g., 'products', 'documents')
+     * @param string $directory Directory dalam storage (e.g., 'products', 'documents')
      * @param string|null $customName Custom filename (optional)
      * @return array ['success' => bool, 'path' => string, 'url' => string]
      */
@@ -42,29 +31,23 @@ class StorageService
 
             $path = $directory ? $directory . '/' . $filename : $filename;
             
-            // Upload menggunakan Supabase REST API
-            $response = Http::withHeaders([
-                'apikey' => $this->apiKey,
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => $file->getMimeType(),
-            ])->withBody(file_get_contents($file->getRealPath()), $file->getMimeType())
-              ->post("{$this->url}/storage/v1/object/{$this->bucket}/{$path}");
+            // Store file
+            $stored = $file->storeAs($directory, $filename, 'public');
 
-            if ($response->successful()) {
+            if ($stored) {
                 return [
                     'success' => true,
-                    'path' => $path,
-                    'url' => $this->url($path),
+                    'path' => $stored,
+                    'url' => Storage::url($stored),
                     'filename' => $filename,
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Upload failed',
+                'error' => 'Failed to upload file',
             ];
         } catch (\Exception $e) {
-            Log::error('Supabase upload error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -97,20 +80,14 @@ class StorageService
     /**
      * Delete file
      * 
-     * @param string $path Path file dalam bucket
+     * @param string $path Path file dalam storage
      * @return bool
      */
     public function delete($path)
     {
         try {
-            $response = Http::withHeaders([
-                'apikey' => $this->apiKey,
-                'Authorization' => 'Bearer ' . $this->apiKey,
-            ])->delete("{$this->url}/storage/v1/object/{$this->bucket}/{$path}");
-
-            return $response->successful();
+            return Storage::disk('public')->delete($path);
         } catch (\Exception $e) {
-            Log::error('Supabase delete error: ' . $e->getMessage());
             return false;
         }
     }
@@ -118,12 +95,12 @@ class StorageService
     /**
      * Get public URL
      * 
-     * @param string $path Path file dalam bucket
+     * @param string $path Path file dalam storage
      * @return string
      */
     public function url($path)
     {
-        return "{$this->url}/storage/v1/object/public/{$this->bucket}/{$path}";
+        return Storage::url($path);
     }
 
     /**
@@ -134,15 +111,6 @@ class StorageService
      */
     public function exists($path)
     {
-        try {
-            $response = Http::withHeaders([
-                'apikey' => $this->apiKey,
-                'Authorization' => 'Bearer ' . $this->apiKey,
-            ])->head("{$this->url}/storage/v1/object/public/{$this->bucket}/{$path}");
-
-            return $response->successful();
-        } catch (\Exception $e) {
-            return false;
-        }
+        return Storage::disk('public')->exists($path);
     }
 }
