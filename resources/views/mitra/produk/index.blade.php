@@ -34,7 +34,8 @@
                                         <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border">
                     @if($item->gambar)
                         {{-- Gunakan Storage::disk('s3') untuk mengambil URL dari Supabase --}}
-                        <img src="{{ Storage::disk('s3')->url($item->gambar) }}" class="w-full h-full object-cover">
+            <img src="https://twbvqgjedeapqszljzox.supabase.co/storage/v1/object/public/produk/{{ $item->gambar }}"
+     class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-slate-300">
                             <i class="fas fa-image"></i>
