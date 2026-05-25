@@ -6,7 +6,7 @@ namespace App\Http\Controllers\KepalaBumdes;
 use App\Http\Controllers\Controller;
 use App\Models\SaldoAwal;
 use App\Models\RekapPengeluaran;
-use App\Models\Bagihasil;
+use App\Models\BagiHasil;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +49,7 @@ class InputKeuanganController extends Controller
             })->sum('saldo_awal');
 
             // B. Ambil total Pemasukan (Bagi Hasil) di masa lalu
-            $totalPemasukanLalu = Bagihasil::where('status', 'SELESAI')
+            $totalPemasukanLalu = BagiHasil::where('status', 'SELESAI')
                 ->where('tanggal', '<', $tanggalBatas)
                 ->sum('nominal_bumdes');
 
@@ -63,7 +63,7 @@ class InputKeuanganController extends Controller
         // ====================================================================
 
         // 3. Ambil Pemasukan BULAN INI
-        $dataPemasukan = Bagihasil::whereMonth('tanggal', $bulanAktif)
+        $dataPemasukan = BagiHasil::whereMonth('tanggal', $bulanAktif)
             ->whereYear('tanggal', $tahunAktif)
             ->where('status', 'SELESAI')
             ->get()
