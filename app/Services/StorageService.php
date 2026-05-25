@@ -2,20 +2,23 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Storage Service untuk Supabase Storage
- * 
- * Helper class untuk upload, delete, dan manage files di Supabase Storage
+ * Storage Service untuk Supabase Storage menggunakan REST API
  */
 class StorageService
 {
-    protected $disk;
+    protected $url;
+    protected $bucket;
+    protected $apiKey;
 
     public function __construct()
     {
-        $this->disk = Storage::disk('s3');
+        $this->url = config('supabase.url', 'https://twbvqgjedeapqszljzox.supabase.co');
+        $this->bucket = config('supabase.storage.bucket', 'produk');
+        $this->apiKey = config('supabase.service_key');
     }
 
     /**
@@ -39,22 +42,29 @@ class StorageService
 
             $path = $directory ? $directory . '/' . $filename : $filename;
             
-            $uploaded = $this->disk->put($path, file_get_contents($file), 'public');
+            // Upload menggunakan Supabase REST API
+            $response = Http::withHeaders([
+                'apikey' => $this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => $file->getMimeType(),
+            ])->withBody(file_get_contents($file->getRealPath()), $file->getMimeType())
+              ->post("{$this->url}/storage/v1/object/{$this->bucket}/{$path}");
 
-            if ($uploaded) {
+            if ($response->successful()) {
                 return [
                     'success' => true,
                     'path' => $path,
-                    'url' => $this->disk->url($path),
+                    'url' => $this->url($path),
                     'filename' => $filename,
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => 'Failed to upload file',
+                'error' => $response->json()['message'] ?? 'Upload failed',
             ];
         } catch (\Exception $e) {
+            Log::error('Supabase upload error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -93,8 +103,14 @@ class StorageService
     public function delete($path)
     {
         try {
-            return $this->disk->delete($path);
+            $response = Http::withHeaders([
+                'apikey' => $this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
+            ])->delete("{$this->url}/storage/v1/object/{$this->bucket}/{$path}");
+
+            return $response->successful();
         } catch (\Exception $e) {
+            Log::error('Supabase delete error: ' . $e->getMessage());
             return false;
         }
     }
@@ -107,7 +123,7 @@ class StorageService
      */
     public function url($path)
     {
-        return $this->disk->url($path);
+        return "{$this->url}/storage/v1/object/public/{$this->bucket}/{$path}";
     }
 
     /**
@@ -118,6 +134,15 @@ class StorageService
      */
     public function exists($path)
     {
-        return $this->disk->exists($path);
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
+            ])->head("{$this->url}/storage/v1/object/public/{$this->bucket}/{$path}");
+
+            return $response->successful();
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }
