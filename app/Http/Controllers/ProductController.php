@@ -56,7 +56,7 @@ class ProductController extends Controller
         // 2. Upload gambar jika ada
         $path = null;
         if ($request->hasFile('gambar')) {
-            $path = $request->file('gambar')->store('produk', 'public');
+            $path = $request->file('gambar')->store('produk', 's3');
         }
 
         // 3. Simpan ke database
@@ -110,10 +110,10 @@ class ProductController extends Controller
         $path = $produk->gambar;
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama
-            if ($produk->gambar) {
-                Storage::disk('public')->delete($produk->gambar);
-            }
-            $path = $request->file('gambar')->store('produk', 'public');
+           if ($produk->gambar) {
+  Storage::disk('s3')->delete($produk->gambar);
+}
+$path = $request->file('gambar')->store('produk', 's3');
         }
 
         $produk->update([
@@ -135,7 +135,7 @@ class ProductController extends Controller
         $produk = Produk::where('user_id', Auth::id())->findOrFail($id);
 
         if ($produk->gambar) {
-            Storage::disk('public')->delete($produk->gambar);
+          Storage::disk('s3')->delete($produk->gambar);
         }
 
         $produk->delete();
