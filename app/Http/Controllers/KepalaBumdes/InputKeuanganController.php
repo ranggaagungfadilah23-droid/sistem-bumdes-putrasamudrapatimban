@@ -1,7 +1,7 @@
 <?php
-// File: app/Http/Controllers/KepalabumdEs/InputKeuanganController.php
+// File: app/Http/Controllers/KepalaBumdes/InputKeuanganController.php
 
-namespace App\Http\Controllers\KepalabumdEs;
+namespace App\Http\Controllers\KepalaBumdes;
 
 use App\Http\Controllers\Controller;
 use App\Models\SaldoAwal;

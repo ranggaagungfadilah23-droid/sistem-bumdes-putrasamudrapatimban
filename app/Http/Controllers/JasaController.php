@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Jasa;
-use App\Models\Produk; // Pastikan ini ada
+use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -20,23 +20,21 @@ class JasaController extends Controller
     // 2. Untuk Halaman Publik (Landing Page)
     public function landingPage()
     {
+        // PERBAIKAN TYPO: DARI Jas:: MENJADI Jasa::
         $jasas = Jasa::latest()->take(3)->get();
         $produks = Produk::latest()->take(3)->get();
 
         return view('index', compact('jasas', 'produks'));
     }
 
-    // Di dalam Controller kamu
-public function dashboard()
-{
-    // 1. Ambil data dari database
-    $jasas = \App\Models\Jasa::all();
+    // 3. Dashboard Customer
+    public function dashboard()
+    {
+        $jasas = Jasa::all();
+        $produks = Produk::all();
 
-    // 2. Kirim data ke view dengan nama 'Jasas' (harus sama persis dengan di blade)
-    return view('customer.dashboard', ['Jasas' => $jasas]);
-
-   
-}
+        return view('customer.dashboard', compact('jasas', 'produks'));
+    }
 
     // =============================================
     // TAMPIL FORM TAMBAH JASA
@@ -51,31 +49,19 @@ public function dashboard()
     // =============================================
     public function store(Request $request)
     {
-        // 1. Validasi input
         $request->validate([
             'nama_jasa' => 'required|string|max:255',
             'harga'     => 'required|numeric|min:0',
             'satuan'    => 'required|in:Layanan,Jam,Hari',
             'deskripsi' => 'required|string',
             'gambar'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ], [
-            'nama_jasa.required' => 'Nama layanan wajib diisi.',
-            'harga.required'     => 'Harga wajib diisi.',
-            'harga.numeric'      => 'Harga harus berupa angka.',
-            'satuan.required'    => 'Satuan wajib dipilih.',
-            'satuan.in'          => 'Satuan tidak valid.',
-            'deskripsi.required' => 'Deskripsi wajib diisi.',
-            'gambar.image'       => 'File harus berupa gambar.',
-            'gambar.max'         => 'Ukuran gambar maksimal 2MB.',
         ]);
 
-        // 2. Upload gambar jika ada
         $path = null;
         if ($request->hasFile('gambar')) {
             $path = $request->file('gambar')->store('jasa', 'public');
         }
 
-        // 3. Simpan ke database
         Jasa::create([
             'user_id'   => Auth::id(),
             'nama_jasa' => $request->nama_jasa,
@@ -86,30 +72,21 @@ public function dashboard()
             'status'    => 'aktif',
         ]);
 
-        // 4. Redirect dengan pesan sukses
         return redirect()->route('mitra.kelola')->with('success', 'Layanan jasa berhasil ditambahkan!');
     }
 
-
-     public function show($id)
+    public function show($id)
     {
         $jasa = Jasa::findOrFail($id);
         return view('customer.jasa.show', compact('jasa'));
     }
 
-
-    // =============================================
-    // TAMPIL FORM EDIT JASA
-    // =============================================
     public function edit($id)
     {
         $jasa = Jasa::where('user_id', Auth::id())->findOrFail($id);
         return view('mitra.jasa.edit', compact('jasa'));
     }
 
-    // =============================================
-    // UPDATE JASA
-    // =============================================
     public function update(Request $request, $id)
     {
         $jasa = Jasa::where('user_id', Auth::id())->findOrFail($id);
@@ -141,9 +118,6 @@ public function dashboard()
         return redirect()->route('mitra.kelola')->with('success', 'Layanan jasa berhasil diperbarui!');
     }
 
-    // =============================================
-    // HAPUS JASA
-    // =============================================
     public function destroy($id)
     {
         $jasa = Jasa::where('user_id', Auth::id())->findOrFail($id);

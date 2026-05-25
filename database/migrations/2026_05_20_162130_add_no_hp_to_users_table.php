@@ -9,14 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('users', function (Blueprint $table) {
-            // Menambahkan kolom no_hp setelah email
-            // nullable() agar data user yang sudah ada sebelumnya tidak error
+ public function up()
+{
+    Schema::table('users', function (Blueprint $table) {
+        // Cek dulu apakah kolomnya sudah ada
+        if (!Schema::hasColumn('users', 'no_hp')) {
             $table->string('no_hp', 20)->nullable()->after('email');
-        });
-    }
+        }
+    });
+}
 
     /**
      * Reverse the migrations.

@@ -338,5 +338,4 @@
         if (e.target === this) closeSidebar();
     });
 </script>
-
 @endsection

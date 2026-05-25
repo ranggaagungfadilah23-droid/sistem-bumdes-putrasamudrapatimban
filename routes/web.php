@@ -116,14 +116,14 @@ Route::get('/laporan/pdf', [AdminController::class, 'laporanPdf'])->name('lapora
         Route::post('/pengajuan/{id}/reject', [KepalaBumdesController::class, 'reject'])->name('reject');
 
         Route::get('/laporan-bulanan', [LaporanBulananController::class, 'index'])->name('laporan-bulanan');
-        Route::get('/monitoring-keuangan', [App\Http\Controllers\KepalabumdEs\InputKeuanganController::class, 'index'])->name('monitoring-keuangan');
-        Route::get('/monitoring-keuangan/export', [App\Http\Controllers\KepalabumdEs\InputKeuanganController::class, 'export'])->name('monitoring-keuangan.export');
+        Route::get('/monitoring-keuangan', [App\Http\Controllers\KepalaBumdes\InputKeuanganController::class, 'index'])->name('monitoring-keuangan');
+        Route::get('/monitoring-keuangan/export', [App\Http\Controllers\KepalaBumdes\InputKeuanganController::class, 'export'])->name('monitoring-keuangan.export');
 
         // Rute Operasional Input Keuangan (Terintegrasi Penuh)
-        Route::post('/simpan-saldo-awal', [App\Http\Controllers\KepalabumdEs\InputKeuanganController::class, 'simpanSaldoAwal'])->name('simpan-saldo-awal');
-        Route::delete('/hapus-saldo-awal/{id}', [App\Http\Controllers\KepalabumdEs\InputKeuanganController::class, 'hapusSaldoAwal'])->name('hapus-saldo-awal');
-        Route::post('/simpan-pengeluaran', [App\Http\Controllers\KepalabumdEs\InputKeuanganController::class, 'simpanPengeluaran'])->name('simpan-pengeluaran');
-        Route::delete('/hapus-pengeluaran/{id}', [App\Http\Controllers\KepalabumdEs\InputKeuanganController::class, 'hapusPengeluaran'])->name('hapus-pengeluaran');
+        Route::post('/simpan-saldo-awal', [App\Http\Controllers\KepalaBumdes\InputKeuanganController::class, 'simpanSaldoAwal'])->name('simpan-saldo-awal');
+        Route::delete('/hapus-saldo-awal/{id}', [App\Http\Controllers\KepalaBumdes\InputKeuanganController::class, 'hapusSaldoAwal'])->name('hapus-saldo-awal');
+        Route::post('/simpan-pengeluaran', [App\Http\Controllers\KepalaBumdes\InputKeuanganController::class, 'simpanPengeluaran'])->name('simpan-pengeluaran');
+        Route::delete('/hapus-pengeluaran/{id}', [App\Http\Controllers\KepalaBumdes\InputKeuanganController::class, 'hapusPengeluaran'])->name('hapus-pengeluaran');
     });
 
     // --- MITRA ---
