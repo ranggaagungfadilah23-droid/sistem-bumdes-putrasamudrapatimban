@@ -15,8 +15,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'google_id',
         'role',
-        'status'
+        'status',
     ];
 
     protected $hidden = [
@@ -32,17 +33,15 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    // --- RELASI ---
-
-    public function mitra() {
-        return $this->hasOne(Mitra::class, 'user_id', 'id');
+    public function mitra()
+    {
+        return $this->hasOne(Mitra::class);
     }
 
-    // Cukup satu fungsi pelanggan() saja
-   public function pelanggan()
-{
-    return $this->hasOne(Pelanggan::class, 'user_id');
-}
+    public function pelanggan()
+    {
+        return $this->hasOne(Pelanggan::class, 'user_id');
+    }
 
     public function produks()
     {
