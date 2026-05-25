@@ -22,6 +22,7 @@ class JasaController extends Controller
     {
 
 
+
         $jasas = Jasa::latest()->take(3)->get();
         $produks = Produk::latest()->take(3)->get();
 
